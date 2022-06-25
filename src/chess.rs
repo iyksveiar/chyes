@@ -69,13 +69,10 @@ pub struct Piece {
 pub struct Board {
 	pub board: [[Piece; 8]; 8], // 2D array of Pieces
 	pub turn: Color,
-	pub castling_black_king_side: bool,
-	pub castling_black_queen_side: bool,
-	pub castling_white_king_side: bool,
-	pub castling_white_queen_side: bool,
+	pub castling_rights: [bool; 4], // 0: white king side, 1: white queen side, 2: black king side, 3: black queen side
 	pub white_pieces: Box<HashMap<Coordinate, Piece>>,
 	pub black_pieces: Box<HashMap<Coordinate, Piece>>,
-	pub last_2_moves_pawn: Option<Coordinate>,
+	pub en_passant_target_sq: Option<Coordinate>,
 	halfmove_clock: i8,
 	fullmove_number: i8,
 }
@@ -86,13 +83,10 @@ impl Board {
 		Board {
 			board: [[piece!(Empty, White); 8]; 8],
 			turn: Color::White,
-			castling_black_king_side: true,
-			castling_black_queen_side: true,
-			castling_white_king_side: true,
-			castling_white_queen_side: true,
+			castling_rights: [false, false, false, false],
 			white_pieces: Box::new(HashMap::new()),
 			black_pieces: Box::new(HashMap::new()),
-			last_2_moves_pawn: None,
+			en_passant_target_sq: None,
 			halfmove_clock: 0,
 			fullmove_number: 1,
 		}
@@ -105,13 +99,10 @@ impl Board {
 			}
 		}
 		self.turn = Color::White;
-		self.castling_black_king_side = false;
-		self.castling_black_queen_side = false;
-		self.castling_white_king_side = false;
-		self.castling_white_queen_side = false;
+		self.castling_rights = [false, false, false, false];
 		self.white_pieces = Box::new(HashMap::new());
 		self.black_pieces = Box::new(HashMap::new());
-		self.last_2_moves_pawn = None;
+		self.en_passant_target_sq = None;
 		self.halfmove_clock = 0;
 		self.fullmove_number = 1;
 	}
@@ -123,7 +114,7 @@ impl Board {
 		let mut fen_array = fen.split(' ');
 		let fen_board = fen_array.next().unwrap();
 		let fen_turn = fen_array.next().unwrap();
-		let _fen_castling = fen_array.next().unwrap(); // todo
+		let fen_castling = fen_array.next().unwrap();
 		let _fen_en_passant = fen_array.next().unwrap();
 		let _fen_half_move = fen_array.next().unwrap(); // todo
 		let _fen_full_move = fen_array.next().unwrap(); // todo
@@ -175,6 +166,19 @@ impl Board {
 				col += 1;
 			}
 		}
+
+		// Castling
+		let mut castling_rights = [false, false, false, false];
+		for c in fen_castling.chars() {
+			match c {
+				'K' => castling_rights[0] = true,
+				'Q' => castling_rights[1] = true,
+				'k' => castling_rights[2] = true,
+				'q' => castling_rights[3] = true,
+				 _  => (),
+			};
+		}
+		self.castling_rights = castling_rights;
 	}
 	
 	pub fn get_fen(&self) -> String {
@@ -238,24 +242,24 @@ impl Board {
 		
 		// TODO: check if castling is possible
 		fen_board.push_str(" ");
-		if self.castling_white_king_side {
+		if self.castling_rights[0] {
 			fen_board.push_str("K");
 		}
-		if self.castling_white_queen_side {
+		if self.castling_rights[1] {
 			fen_board.push_str("Q");
 		}
-		if self.castling_black_king_side {
+		if self.castling_rights[2] {
 			fen_board.push_str("k");
 		}
-		if self.castling_black_queen_side {
+		if self.castling_rights[3] {
 			fen_board.push_str("q");
 		}
 		
 		fen_board.push_str(" ");
-		if self.last_2_moves_pawn == None {
+		if self.en_passant_target_sq == None {
 			fen_board.push_str("-");
 		} else {
-			fen_board.push_str(&self.last_2_moves_pawn.unwrap().to_string());
+			fen_board.push_str(&self.en_passant_target_sq.unwrap().to_string());
 		}
 		
 		fen_board.push_str(" ");
@@ -573,7 +577,11 @@ impl Board {
 		self.board[ending.row as usize][ending.col as usize] = piece;
 
 		if piece.breed == Pieces::Pawn && (ending.row - starting.row).abs() == 2 {
-			self.last_2_moves_pawn = Some(ending);
+			if piece.color == Color::White {
+				self.en_passant_target_sq = Some(coord!(ending.row - 1, ending.col));
+			} else {
+				self.en_passant_target_sq = Some(coord!(ending.row + 1, ending.col));
+			}
 		}
 		
 		// Modify the map of pieces
@@ -747,7 +755,7 @@ impl Board {
 					}
 				}
 				
-				// Cases of attacKing moves
+				// Cases of attacking moves
 				// If diagonal is occupied and the Color is opposite, add it
 				let mut diag_piece: Piece;
 				if piece.color == Color::White {
@@ -784,44 +792,10 @@ impl Board {
           }
 				}
 				
-				if self.last_2_moves_pawn != None {
-					/*
-					. . .
-					. . *
-					. p P
-					*/
-					// Get a Piece on the right and on the left
-					let (left_row, right_coords): (i8, i8) = (col - 1, col + 1);
-					let new_row: i8 = if piece.color == Color::White {
-						row - 1
-					} else {
-						row + 1
-					};
-					// Check bounds
-					// if left is valid
-					if left_row >= 0 && left_row < 8 {
-						let left_piece: Piece = self.board[row as usize][left_row as usize];
-						// New row equals row - 1 if color is White, row + 1 if color is Black
-						if self.last_2_moves_pawn.unwrap() == (Coordinate { row, col: left_row }) {
-							if left_piece.breed == Pawn && left_piece.color != piece.color {
-								result.push(coord!(new_row, left_row));
-							}
-						}
-					}
-					
-					// if right is valid
-					if right_coords >= 0 && right_coords < 8 {
-						let right_piece: Piece = self.board[row as usize][right_coords as usize];
-						// New row equals row - 1 if color is White, row + 1 if color is Black
-						if self.last_2_moves_pawn.unwrap()
-						== (coord!(row, right_coords))
-						{
-							if right_piece.breed == Pawn && right_piece.color != piece.color
-							{
-								result.push(coord!(new_row, right_coords));
-							}
-						}
-					}
+				// En passant
+				match self.en_passant_target_sq {
+					Some(coord) => result.push(coord),
+					None => ()
 				}
 			}
 			
