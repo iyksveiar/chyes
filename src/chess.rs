@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-// Arrays of ASCII symbols of chess pieces
 // Sequence: King, Queen, Rook, Bishop, Knight, Pawn
 const BLACK_PIECES: [&str; 6] = ["♔", "♕", "♖", "♗", "♘", "♙"];
 const WHITE_PIECES: [&str; 6] = ["♚", "♛", "♜", "♝", "♞", "♟"];
