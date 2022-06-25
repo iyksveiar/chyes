@@ -5,6 +5,20 @@ use std::collections::HashMap;
 const BLACK_PIECES: [&str; 6] = ["♔", "♕", "♖", "♗", "♘", "♙"];
 const WHITE_PIECES: [&str; 6] = ["♚", "♛", "♜", "♝", "♞", "♟"];
 
+// Macro to expand coord!(x, y) to Coordinate { row: x, col: y }
+macro_rules! coord {
+	($x:expr, $y:expr) => {
+		Coordinate { row: $x, col: $y }
+	};
+}
+
+// Macro to expand piece!(piece, color) to Piece { breed: Pieces::piece, color: Color::color }
+macro_rules! piece {
+	($piece:ident, $color:ident) => {
+		Piece { breed: Pieces::$piece, color: Color::$color }
+	};
+}
+
 // Coordinate struct
 #[derive(Eq, Hash, Clone, Copy, PartialEq, Debug)]
 pub struct Coordinate {
@@ -71,10 +85,7 @@ pub struct Board {
 impl Board {
 	pub fn new() -> Self {
 		Board {
-			board: [[Piece {
-				breed: Pieces::Empty,
-				color: Color::White,
-			}; 8]; 8],
+			board: [[piece!(Empty, White); 8]; 8],
 			turn: Color::White,
 			castling_black_king_side: true,
 			castling_black_queen_side: true,
@@ -91,10 +102,7 @@ impl Board {
 	pub fn clear(&mut self) {
 		for i in 0..8 {
 			for j in 0..8 {
-				self.board[i][j] = Piece {
-					breed: Pieces::Empty,
-					color: Color::White,
-				};
+				self.board[i][j] = piece!(Empty, White);
 			}
 		}
 		self.turn = Color::White;
@@ -145,58 +153,19 @@ impl Board {
 				col += c.to_digit(10).unwrap() as i8;
 			} else {
 				piece = match c {
-					'K' => Some(Piece {
-						breed: Pieces::King,
-						color: Color::White,
-					}),
-					'Q' => Some(Piece {
-						breed: Pieces::Queen,
-						color: Color::White,
-					}),
-					'R' => Some(Piece {
-						breed: Pieces::Rook,
-						color: Color::White,
-					}),
-					'B' => Some(Piece {
-						breed: Pieces::Bishop,
-						color: Color::White,
-					}),
-					'N' => Some(Piece {
-						breed: Pieces::Knight,
-						color: Color::White,
-					}),
-					'P' => Some(Piece {
-						breed: Pieces::Pawn,
-						color: Color::White,
-					}),
-					'k' => Some(Piece {
-						breed: Pieces::King,
-						color: Color::Black,
-					}),
-					'q' => Some(Piece {
-						breed: Pieces::Queen,
-						color: Color::Black,
-					}),
-					'r' => Some(Piece {
-						breed: Pieces::Rook,
-						color: Color::Black,
-					}),
-					'b' => Some(Piece {
-						breed: Pieces::Bishop,
-						color: Color::Black,
-					}),
-					'n' => Some(Piece {
-						breed: Pieces::Knight,
-						color: Color::Black,
-					}),
-					'p' => Some(Piece {
-						breed: Pieces::Pawn,
-						color: Color::Black,
-					}),
-					_ => Some(Piece {
-						breed: Pieces::Empty,
-						color: Color::White,
-					}),
+					'K' => Some(piece!(King, White)),
+					'Q' => Some(piece!(Queen, White)),
+					'R' => Some(piece!(Rook, White)),
+					'B' => Some(piece!(Bishop, White)),
+					'N' => Some(piece!(Knight, White)),
+					'P' => Some(piece!(Pawn, White)),
+					'k' => Some(piece!(King, Black)),
+					'q' => Some(piece!(Queen, Black)),
+					'r' => Some(piece!(Rook, Black)),
+					'b' => Some(piece!(Bishop, Black)),
+					'n' => Some(piece!(Knight, Black)),
+					'p' => Some(piece!(Pawn, Black)),
+					 _  => Some(piece!(Empty, White)),
 				};
 			};
 			
@@ -218,7 +187,9 @@ impl Board {
 		
 		for i in 0..8 {
 			for j in 0..8 {
-				if self.board[i][j].breed == Pieces::Empty {
+				let piece = self.board[i][j];
+
+				if piece.breed == Pieces::Empty {
 					empty_count += 1;
 				} else {
 					if empty_count > 0 {
@@ -226,51 +197,25 @@ impl Board {
 						empty_count = 0;
 					}
 					
-					match self.board[i][j].breed {
-						Pieces::King => {
-							if self.board[i][j].color == Color::White {
-								fen_board.push_str("K");
-							} else {
-								fen_board.push_str("k");
-							}
-						}
-						Pieces::Queen => {
-							if self.board[i][j].color == Color::White {
-								fen_board.push_str("Q");
-							} else {
-								fen_board.push_str("q");
-							}
-						}
-						Pieces::Rook => {
-							if self.board[i][j].color == Color::White {
-								fen_board.push_str("R");
-							} else {
-								fen_board.push_str("r");
-							}
-						}
-						Pieces::Bishop => {
-							if self.board[i][j].color == Color::White {
-								fen_board.push_str("B");
-							} else {
-								fen_board.push_str("b");
-							}
-						}
-						Pieces::Knight => {
-							if self.board[i][j].color == Color::White {
-								fen_board.push_str("N");
-							} else {
-								fen_board.push_str("n");
-							}
-						}
-						Pieces::Pawn => {
-							if self.board[i][j].color == Color::White {
-								fen_board.push_str("P");
-							} else {
-								fen_board.push_str("p");
-							}
-						}
-						_ => panic!("Invalid piece"),
-					}
+					use Pieces::*;
+					use Color::*;
+
+					let mut chr = match piece.breed {
+							King => 'k',
+							Queen => 'q',
+							Rook => 'r',
+							Bishop => 'b',
+							Knight => 'n',
+							Pawn => 'p',
+							_ => panic!("Invalid piece"),
+					};
+
+					// If piece is white, transform to upper case
+					if piece.color == White {
+						chr = chr.to_ascii_uppercase();
+					}	
+
+					fen_board.push_str(chr.to_string().as_str());
 				}
 			}
 			
@@ -372,32 +317,33 @@ impl Board {
 				}
 				
 				// match the Piece to the correct character
+				use Pieces::*;
 				match piece.breed {
-					Pieces::King => {
+					King => {
 						print!("{} ", array_of_chars_for_pieces[0]);
-					}
+					},
 					
-					Pieces::Queen => {
+					Queen => {
 						print!("{} ", array_of_chars_for_pieces[1]);
-					}
+					},
 					
-					Pieces::Rook => {
+					Rook => {
 						print!("{} ", array_of_chars_for_pieces[2]);
-					}
+					},
 					
-					Pieces::Bishop => {
+					Bishop => {
 						print!("{} ", array_of_chars_for_pieces[3]);
-					}
+					},
 					
-					Pieces::Knight => {
+					Knight => {
 						print!("{} ", array_of_chars_for_pieces[4]);
-					}
+					},
 					
-					Pieces::Pawn => {
+					Pawn => {
 						print!("{} ", array_of_chars_for_pieces[5]);
-					}
+					},
 					
-					Pieces::Empty => {
+					Empty => {
 						print!("\x1b[39;49m.\x1b[0m ");
 					}
 				}
@@ -424,19 +370,13 @@ impl Board {
 					
 					if piece.breed != Pieces::Empty {
 						if piece.color != color {
-							result.push(Coordinate {
-								row: new_row,
-								col: new_col,
-							});
+							result.push(coord!(new_row, new_col));
 							left_up = false;
 						} else if piece.color == color {
 							left_up = false;
 						}
 					} else {
-						result.push(Coordinate {
-							row: new_row,
-							col: new_col,
-						});
+						result.push(coord!(new_row, new_col));
 					}
 				} else {
 					left_up = false;
@@ -453,19 +393,13 @@ impl Board {
 					
 					if piece.breed != Pieces::Empty {
 						if piece.color != color {
-							result.push(Coordinate {
-								row: new_row,
-								col: new_col,
-							});
+							result.push(coord!(new_row, new_col));
 							left_down = false;
 						} else if piece.color == color {
 							left_down = false;
 						}
 					} else {
-						result.push(Coordinate {
-							row: new_row,
-							col: new_col,
-						});
+						result.push(coord!(new_row, new_col));
 					}
 				} else {
 					left_down = false;
@@ -482,19 +416,13 @@ impl Board {
 					
 					if piece.breed != Pieces::Empty {
 						if piece.color != color {
-							result.push(Coordinate {
-								row: new_row,
-								col: new_col,
-							});
+							result.push(coord!(new_row, new_col));
 							right_up = false;
 						} else if piece.color == color {
 							right_up = false;
 						}
 					} else {
-						result.push(Coordinate {
-							row: new_row,
-							col: new_col,
-						});
+						result.push(coord!(new_row, new_col));
 					}
 				} else {
 					right_up = false;
@@ -511,19 +439,13 @@ impl Board {
 					
 					if piece.breed != Pieces::Empty {
 						if piece.color != color {
-							result.push(Coordinate {
-								row: new_row,
-								col: new_col,
-							});
+							result.push(coord!(new_row, new_col));
 							right_down = false;
 						} else if piece.color == color {
 							right_down = false;
 						}
 					} else {
-						result.push(Coordinate {
-							row: new_row,
-							col: new_col,
-						});
+						result.push(coord!(new_row, new_col));
 					}
 				} else {
 					right_down = false;
@@ -552,19 +474,13 @@ impl Board {
 					
 					if piece.breed != Pieces::Empty {
 						if piece.color != color {
-							result.push(Coordinate {
-								row: new_row,
-								col: new_col,
-							});
+							result.push(coord!(new_row, new_col));
 							up = false;
 						} else if piece.color == color {
 							up = false;
 						}
 					} else {
-						result.push(Coordinate {
-							row: new_row,
-							col: new_col,
-						});
+						result.push(coord!(new_row, new_col));
 					}
 				} else {
 					up = false;
@@ -581,19 +497,13 @@ impl Board {
 					
 					if piece.breed != Pieces::Empty {
 						if piece.color != color {
-							result.push(Coordinate {
-								row: new_row,
-								col: new_col,
-							});
+							result.push(coord!(new_row, new_col));
 							down = false;
 						} else if piece.color == color {
 							down = false;
 						}
 					} else {
-						result.push(Coordinate {
-							row: new_row,
-							col: new_col,
-						});
+						result.push(coord!(new_row, new_col));
 					}
 				} else {
 					down = false;
@@ -610,19 +520,13 @@ impl Board {
 					
 					if piece.breed != Pieces::Empty {
 						if piece.color != color {
-							result.push(Coordinate {
-								row: new_row,
-								col: new_col,
-							});
+							result.push(coord!(new_row, new_col));
 							left = false;
 						} else if piece.color == color {
 							left = false;
 						}
 					} else {
-						result.push(Coordinate {
-							row: new_row,
-							col: new_col,
-						});
+						result.push(coord!(new_row, new_col));
 					}
 				} else {
 					left = false;
@@ -639,19 +543,13 @@ impl Board {
 					
 					if piece.breed != Pieces::Empty {
 						if piece.color != color {
-							result.push(Coordinate {
-								row: new_row,
-								col: new_col,
-							});
+							result.push(coord!(new_row, new_col));
 							right = false;
 						} else if piece.color == color {
 							right = false;
 						}
 					} else {
-						result.push(Coordinate {
-							row: new_row,
-							col: new_col,
-						});
+						result.push(coord!(new_row, new_col));
 					}
 				} else {
 					right = false;
@@ -755,49 +653,24 @@ impl Board {
 		let mut result: Vec<Coordinate> = Vec::new();
 		let piece: Piece = self.board[row as usize][col as usize];
 		
+		use Pieces::*;
 		match piece.breed {
-			Pieces::King => {
+			King => {
 				// * * * (-1 +1) (0 +1) (+1 +1)
 				// * K * (-1 0) (0 0) (+1 0)
 				// * * * (-1 -1) (0 -1) (+1 -1)
 				
-				result.push(Coordinate {
-					row: row - 1,
-					col: col + 1,
-				});
-				result.push(Coordinate {
-					row,
-					col: col + 1,
-				});
-				result.push(Coordinate {
-					row: row + 1,
-					col: col + 1,
-				});
-				
-				result.push(Coordinate {
-					row: row - 1,
-					col,
-				});
-				result.push(Coordinate {
-					row: row + 1,
-					col,
-				});
-				
-				result.push(Coordinate {
-					row: row - 1,
-					col: col - 1,
-				});
-				result.push(Coordinate {
-					row,
-					col: col - 1,
-				});
-				result.push(Coordinate {
-					row: row + 1,
-					col: col - 1,
-				});
+				result.push(coord!(row - 1, col + 1));
+				result.push(coord!(row, col + 1));
+				result.push(coord!(row + 1, col + 1));
+				result.push(coord!(row - 1, col));
+				result.push(coord!(row + 1, col));
+				result.push(coord!(row - 1, col - 1));
+				result.push(coord!(row, col - 1));
+				result.push(coord!(row + 1, col - 1));
 			}
 			
-			Pieces::Queen => {
+			Queen => {
 				// * . * . *
 				// . * * * .
 				// * * Q * *
@@ -809,15 +682,15 @@ impl Board {
 				result.append(&mut self.linear_moves(row, col, piece.color));
 			}
 			
-			Pieces::Rook => {
+			Rook => {
 				result = self.linear_moves(row, col, piece.color);
 			}
 			
-			Pieces::Bishop => {
+			Bishop => {
 				result = self.diagonal_moves(row, col, piece.color);
 			}
 			
-			Pieces::Knight => {
+			Knight => {
 				/*
 				. . * . * . .
 				. * . . . * .
@@ -826,41 +699,17 @@ impl Board {
 				. . * . * . .
 				*/
 				
-				result.push(Coordinate {
-					row: row - 2,
-					col: col - 1,
-				});
-				result.push(Coordinate {
-					row: row - 2,
-					col: col + 1,
-				});
-				result.push(Coordinate {
-					row: row - 1,
-					col: col - 2,
-				});
-				result.push(Coordinate {
-					row: row - 1,
-					col: col + 2,
-				});
-				result.push(Coordinate {
-					row: row + 1,
-					col: col - 2,
-				});
-				result.push(Coordinate {
-					row: row + 1,
-					col: col + 2,
-				});
-				result.push(Coordinate {
-					row: row + 2,
-					col: col - 1,
-				});
-				result.push(Coordinate {
-					row: row + 2,
-					col: col + 1,
-				});
+				result.push(coord!(row + 2, col + 1));
+				result.push(coord!(row + 2, col - 1));
+				result.push(coord!(row + 1, col + 2));
+				result.push(coord!(row + 1, col - 2));
+				result.push(coord!(row - 1, col + 2));
+				result.push(coord!(row - 1, col - 2));
+				result.push(coord!(row - 2, col + 1));
+				result.push(coord!(row - 2, col - 1));
 			}
 			
-			Pieces::Pawn => {
+			Pawn => {
 				/*
 				. . .
 				. . .
@@ -870,30 +719,18 @@ impl Board {
 				// Cases of 2 space moves
 				if piece.color == Color::White && row == 6 {
 					// If the way is not occupied, add the two spaces
-					if self.board[(row - 1) as usize][col as usize].breed == Pieces::Empty {
-						result.push(Coordinate {
-							row: row - 1,
-							col,
-						});
-						if self.board[(row - 2) as usize][col as usize].breed == Pieces::Empty {
-							result.push(Coordinate {
-								row: row - 2,
-								col,
-							});
+					if self.board[(row - 1) as usize][col as usize].breed == Empty {
+						result.push(coord!(row - 1, col));
+						if self.board[(row - 2) as usize][col as usize].breed == Empty {
+							result.push(coord!(row - 2, col));
 						}
 					}
 				} else if piece.color == Color::Black && row == 1 {
 					// If the way is not occupied, add the two spaces
-					if self.board[(row + 1) as usize][col as usize].breed == Pieces::Empty {
-						result.push(Coordinate {
-							row: row + 1,
-							col,
-						});
-						if self.board[(row + 2) as usize][col as usize].breed == Pieces::Empty {
-							result.push(Coordinate {
-								row: row + 2,
-								col,
-							});
+					if self.board[(row + 1) as usize][col as usize].breed == Empty {
+						result.push(coord!(row + 1, col)); 
+						if self.board[(row + 2) as usize][col as usize].breed == Empty {
+							result.push(coord!(row + 2, col));
 						}
 					}
 				}
@@ -901,19 +738,13 @@ impl Board {
 				// Cases of 1 space moves
 				if piece.color == Color::White {
 					// If the way is not occupied, add the one space
-					if row > 0 && self.board[(row - 1) as usize][col as usize].breed == Pieces::Empty {
-						result.push(Coordinate {
-							row: row - 1,
-							col,
-						});
+					if row > 0 && self.board[(row - 1) as usize][col as usize].breed == Empty {
+						result.push(coord!(row - 1, col));
 					}
 				} else if piece.color == Color::Black {
 					// If the way is not occupied, add the one space
-					if row < 7 && self.board[(row + 1) as usize][col as usize].breed == Pieces::Empty {
-						result.push(Coordinate {
-							row: row + 1,
-							col,
-						});
+					if row < 7 && self.board[(row + 1) as usize][col as usize].breed == Empty {
+						result.push(coord!(row + 1, col));
 					}
 				}
 				
@@ -924,44 +755,32 @@ impl Board {
           if row >= 1 && col >= 1 {
             // Diag left
             diag_piece = self.board[(row - 1) as usize][(col - 1) as usize];
-            if diag_piece.breed != Pieces::Empty && diag_piece.color != piece.color {
-              result.push(Coordinate {
-                row: row - 1,
-                col: col - 1,
-              });
+            if diag_piece.breed != Empty && diag_piece.color != piece.color {
+              result.push(coord!(row - 1, col - 1));
             }
           }
 					
           if row >= 1 && col < 7 {
             // Diag right
             diag_piece = self.board[(row - 1) as usize][(col + 1) as usize];
-            if diag_piece.breed != Pieces::Empty && diag_piece.color != piece.color {
-              result.push(Coordinate {
-                row: row - 1,
-                col: col + 1,
-              });
+            if diag_piece.breed != Empty && diag_piece.color != piece.color {
+              result.push(coord!(row - 1, col + 1));
             }
           }
 				} else if piece.color == Color::Black {
           if row < 7 && col >= 1 {
             // Diag left
             diag_piece = self.board[(row + 1) as usize][(col - 1) as usize];
-            if diag_piece.breed != Pieces::Empty && diag_piece.color != piece.color {
-              result.push(Coordinate {
-                row: row + 1,
-                col: col - 1,
-              });
+            if diag_piece.breed != Empty && diag_piece.color != piece.color {
+              result.push(coord!(row + 1, col - 1));
             }
           }
 					
           if row < 7 && col < 7 {
             // Diag right
             diag_piece = self.board[(row + 1) as usize][(col + 1) as usize];
-            if diag_piece.breed != Pieces::Empty && diag_piece.color != piece.color {
-              result.push(Coordinate {
-                row: row + 1,
-                col: col + 1,
-              });
+            if diag_piece.breed != Empty && diag_piece.color != piece.color {
+							result.push(coord!(row + 1, col + 1));
             }
           }
 				}
@@ -985,11 +804,8 @@ impl Board {
 						let left_piece: Piece = self.board[row as usize][left_row as usize];
 						// New row equals row - 1 if color is White, row + 1 if color is Black
 						if self.last_2_moves_pawn.unwrap() == (Coordinate { row, col: left_row }) {
-							if left_piece.breed == Pieces::Pawn && left_piece.color != piece.color {
-								result.push(Coordinate {
-									row: new_row,
-									col: left_row,
-								});
+							if left_piece.breed == Pawn && left_piece.color != piece.color {
+								result.push(coord!(new_row, left_row));
 							}
 						}
 					}
@@ -999,24 +815,18 @@ impl Board {
 						let right_piece: Piece = self.board[row as usize][right_coords as usize];
 						// New row equals row - 1 if color is White, row + 1 if color is Black
 						if self.last_2_moves_pawn.unwrap()
-						== (Coordinate {
-							row,
-							col: right_coords,
-						})
+						== (coord!(row, right_coords))
 						{
-							if right_piece.breed == Pieces::Pawn && right_piece.color != piece.color
+							if right_piece.breed == Pawn && right_piece.color != piece.color
 							{
-								result.push(Coordinate {
-									row: new_row,
-									col: right_coords,
-								});
+								result.push(coord!(new_row, right_coords));
 							}
 						}
 					}
 				}
 			}
 			
-			Pieces::Empty => {}
+			Empty => {}
 		}
 		
 		// Filter out the Coordinates that are out of bounds
@@ -1044,7 +854,7 @@ impl Board {
 		});
 		
 		// Filter out moves that lead to check
-		return self.filter_check_moves(Coordinate { row, col }, result);
+		return self.filter_check_moves(coord!(row, col), result);
 		// result
 	}
 	
