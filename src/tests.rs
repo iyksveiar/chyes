@@ -979,18 +979,17 @@ mod tests {
 		2 valid moves
 		*/
 		
-		board.place_piece(pawn, 4, 3);
+		board.place_piece(pawn, 3, 3);
 		board.place_piece(
 			Piece {
 				breed: Pieces::Pawn,
 				color: Color::Black,
 			},
-			4,
+			3,
 			4,
 		);
-		board.last_2_moves_pawn = Some(Coordinate { row: 4, col: 4 });
-		board.get_moves(4, 3);
-		moves = board.get_moves(4, 3);
+		board.en_passant_target_sq = Some(Coordinate { row: 2, col: 4 });
+		moves = board.get_moves(3, 3);
 		assert_eq!(moves.len(), 2);
 		board.clear();
 		
@@ -1005,34 +1004,7 @@ mod tests {
 		2 valid moves
 		*/
 		
-		board.place_piece(pawn, 4, 3);
-		board.place_piece(
-			Piece {
-				breed: Pieces::Pawn,
-				color: Color::Black,
-			},
-			4,
-			4,
-		);
-		board.place_piece(
-			Piece {
-				breed: Pieces::King,
-				color: Color::White,
-			},
-			3,
-			3,
-		);
-		board.place_piece(
-			Piece {
-				breed: Pieces::Pawn,
-				color: Color::Black,
-			},
-			3,
-			2,
-		);
-		board.last_2_moves_pawn = Some(Coordinate { row: 4, col: 4 });
-		board.get_moves(4, 3);
-		moves = board.get_moves(4, 3);
+		board.load_fen("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1");
 		assert_eq!(moves.len(), 2);
 		board.clear();
 	}
@@ -1046,7 +1018,7 @@ mod tests {
        K P r
        . . .
 
-       For Pawn it is 0 valid moves
+       For pawn it is 0 valid moves
     */
 
     board.load_fen("8/8/8/8/1KP3r1/8/8/8 w - - 0 1");
