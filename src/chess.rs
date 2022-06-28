@@ -707,9 +707,10 @@ impl Board {
 
 		let piece = self.get_piece(coord);
 		let position = coord.as_number();
+        let mut moves: Vec<i8> = Vec::new();
 
 		use Pieces::*;
-		let mut moves: Vec<i8> = match piece.breed {
+		match piece.breed {
 			King => {
 				/*
 					+7 +8 +9
@@ -717,158 +718,113 @@ impl Board {
 					-9 -8 -7
 				*/
 
-				let mut result: Vec<i8> = Vec::new();
-				let mut on_way_piece: Piece;
+                let mut check = |num: i8, coord: Coordinate, row_diff: i8, col_diff: i8| {
+                    let new_row = coord.row + row_diff;
+                    let new_col = coord.col + col_diff;
 
-				macro_rules! check {
-					($num: expr) => {
-						if $num >= 0 && $num <= 63 {
-							on_way_piece = self.get_piece(Coordinate::from_number($num));
-							if on_way_piece.breed == Pieces::Empty || on_way_piece.color != piece.color {
-								result.push($num);
-							}
-						}
-					};
-				}
+                    if (new_row >= 0 && new_row <= 7) && (new_col >= 0 && new_col <= 7) {
+                        let on_way_piece = self.get_piece(coord!(new_row, new_col));
+                        if on_way_piece.breed == Pieces::Empty || on_way_piece.color != piece.color {
+                            moves.push(num);
+                        }
+                    }
+                };
 
-				check!(position + 7);
-				check!(position + 8);
-				check!(position + 9);
-				check!(position - 1);
-				check!(position + 1);
-				check!(position - 9);
-				check!(position - 8);
-				check!(position - 7);
-
-				result
+				check(position + 7, coord, -1, -1);
+				check(position + 9, coord, -1, 1);
+                check(position + 8, coord, -1, 0);
+				check(position - 1, coord, 0, -1);
+				check(position + 1, coord, 0, 1);
+				check(position - 9, coord, 1, -1);
+				check(position - 8, coord, 1, 0);
+				check(position - 7, coord, 1, 1);
 			},
 			Queen => {
-				//       up,     down,     left,     right, up_left, up_right, down_left, down_right]	
-				let (mut up, mut down, mut left, mut right, mut ul, mut ur, mut dl, mut dr) = (true, true, true, true, true, true, true, true);
-				let mut new: i8;
-				let mut result: Vec<i8> = Vec::new();
-				let mut on_way_piece: Piece;
-
-				macro_rules! check {
-					($bool:ident, $expr:expr) => {
-						if $bool {
-							new = $expr;
-							if new >= 0 && new <= 63 {
-								on_way_piece = self.get_piece(Coordinate::from_number(new));
-								if on_way_piece.breed == Pieces::Empty {
-									if on_way_piece.color == piece.color {
-										$bool = false;
-									} else {
-										result.push(new);
-										$bool = false;
-										result.push(new);
-									}
-								}
-							}
-						}
-					};
-				}
-
-				for inc in 1..9 {
-					// left and right
-					check!(right, position + inc);
-					check!(left, position - inc);
-
-					// Up and Down
-					check!(up, position + inc * 8);
-					check!(down, position - inc * 8);
-
-					// Diagonal
-					check!(ul, position + inc * 7);
-					check!(ur, position + inc * 9);
-					check!(dl, position - inc * 9);
-					check!(dr, position - inc * 7);
-				}
-
-				result
+                moves.append(&mut self.linear_moves(coord, piece.color).iter().map(|x| x.as_number()).collect());
+                moves.append(&mut self.diagonal_moves(coord, piece.color).iter().map(|x| x.as_number()).collect());
 			},
 
 			Rook => {
-				self.linear_moves(coord, piece.color).iter().map(|x| x.as_number()).collect()
+				moves = self.linear_moves(coord, piece.color).iter().map(|x| x.as_number()).collect();
 			},
 
 			Bishop => {
-				self.diagonal_moves(coord, piece.color).iter().map(|x| x.as_number()).collect()
+				moves = self.diagonal_moves(coord, piece.color).iter().map(|x| x.as_number()).collect();
 			},
 
 			Knight => {
-				let mut result: Vec<i8> = Vec::new();
-				let mut on_way_piece: Piece;
+                let mut check = |num: i8, coord: Coordinate, row_diff: i8, col_diff: i8| {
+                    let new_row = coord.row + row_diff;
+                    let new_col = coord.col + col_diff;
 
-				macro_rules! check {
-					($num: expr) => {
-						if $num >= 0 && $num <= 63 {
-							on_way_piece = self.get_piece(Coordinate::from_number($num));
-							if on_way_piece.breed == Pieces::Empty || on_way_piece.color != piece.color {
-								result.push($num);
-							}
-						}
-					}
-				}
+                    if (new_row >= 0 && new_row <= 7) && (new_col >= 0 && new_col <= 7) {
+                        let on_way_piece = self.get_piece(coord!(new_row, new_col));
+                        if on_way_piece.breed == Pieces::Empty || on_way_piece.color != piece.color {
+                            moves.push(num);
+                        }
+                    }
+                };
 
-				check!(position + 17);
-				check!(position - 15);
-				check!(position + 10);
-				check!(position - 6);
-				check!(position + 15);
-				check!(position - 17);
-				check!(position + 6);
-				check!(position - 10);
-				
-				result
+                /*
+                 * Start: 35
+                 * . * . * . ## 50 ## 52 ## +15 +17
+                 * * . . . * 41 ## ## ## 45 +6 +10
+                 * . . N . . ## ## 35 ## ## 
+                 * * . . . * 25 ## ## ## 29 -10 -6
+                 * . * . * . ## 18 ## 20 ## -17 -15
+                 */
+
+                check(position + 10, coord, -1,  2);
+                check(position -  6, coord,  1,  2);
+                check(position + 17, coord, -2,  1);
+                check(position - 15, coord,  2,  1);
+                check(position + 15, coord, -2, -1);
+                check(position - 17, coord,  2, -1);
+                check(position +  6, coord, -1, -2);
+                check(position - 10, coord,  1, -2);
 			},
 			Pawn => {
-				let starting_row = if piece.color == Color::White { 1 } else { 6 };
-				let mut result: Vec<i8> = Vec::new();
+				let starting_row = if piece.color == Color::White { 6 } else { 1 };
 				let inc = if piece.color == Color::White { 1 } else { -1 };
 
 				if coord.row == starting_row {
 					// If the square in front of the pawn is empty, add a move
 					if self.get_piece(Coordinate::from_number(position + inc * 8)).breed == Pieces::Empty {
-						result.push(position + inc * 8);
+						moves.push(position + inc * 8);
 						// If the second square in front of the pawn is empty, add a move
 						if self.get_piece(Coordinate::from_number(position + inc * 16)).breed == Pieces::Empty {
-							result.push(position + inc * 16);
+							moves.push(position + inc * 16);
 						}
 					}
 				} else {
 					// If the square in front of the pawn is empty, add a move
 					if self.get_piece(Coordinate::from_number(position + inc * 8)).breed == Pieces::Empty {
-						result.push(position + inc * 8);
+						moves.push(position + inc * 8);
 					}
 				}
 
 				// Attacking moves
 				if self.get_piece(Coordinate::from_number(position + inc * 7)).color != piece.color {
-					result.push(position + inc * 7);
+					moves.push(position + inc * 7);
 				}
 				if self.get_piece(Coordinate::from_number(position + inc * 9)).color != piece.color {
-					result.push(position + inc * 9);
+					moves.push(position + inc * 9);
 				}
 
 				// En passant
 				if self.en_passant_target_sq != None {
 					if position + inc * 7 == self.en_passant_target_sq.unwrap() {
-						result.push(position + inc * 7);
+						moves.push(position + inc * 7);
 					}
 
 					if position + inc * 9 == self.en_passant_target_sq.unwrap() {
-						result.push(position + inc * 9);
+						moves.push(position + inc * 9);
 					}
 				}
-				
-				result
 			},
-			Empty => Vec::new()
-		};
 
-		// Filter out moves that are out of bounds
-		moves.retain(|&x| x >= 0 && x < 64);
+			Empty => {}
+		}
 	
 		return moves;
 	}
