@@ -97,8 +97,8 @@ pub struct Board {
 	pub board: [[Piece; 8]; 8], // 2D array of Pieces
 	pub turn: Color,
 	pub castling_rights: [bool; 4], // 0: white king side, 1: white queen side, 2: black king side, 3: black queen side
-	pub white_pieces: Box<HashMap<Coordinate, Piece>>,
-	pub black_pieces: Box<HashMap<Coordinate, Piece>>,
+	pub white_pieces: Box<HashMap<Coordinate, Piece>>, // Gonna change it to Box<HashMap<i8, Piece>>
+	pub black_pieces: Box<HashMap<Coordinate, Piece>>, // Gonna change it to Box<HashMap<i8, Piece>>
 	pub en_passant_target_sq: Option<i8>,
 	halfmove_clock: i8,
 	fullmove_number: i8,
