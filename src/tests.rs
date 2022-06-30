@@ -215,13 +215,13 @@ mod tests {
     fn king_moves() {
         let mut board = Board::new();
         let king = piece!(King, White);
-        let mut moves: Vec<i8> = Vec::new();
+        let mut moves: Vec<i8>;
 
         // Case 1: King in the top left
         /*
-          K * .
-            * * .
-            . . .
+          K *
+          * * .
+          . . .
         */
         board.place_piece(king, coord!(0, 0));
         moves = board.get_moves(coord!(0, 0));
@@ -858,5 +858,5 @@ mod tests {
       board.load_fen("K6r/7r/6N1/8/8/8/8/8 w - - 0 1");
       assert_eq!(board.is_in_checkmate(Color::White), false);
     }
-      */
+    */
 }
