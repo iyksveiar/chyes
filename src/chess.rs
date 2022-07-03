@@ -616,6 +616,7 @@ impl Board {
 		
 		let piece = piece.unwrap();
 		let captured_piece = self.modify_sq(ending, piece);
+        self.modify_sq(starting, Piece { breed: Pieces::Empty, color: piece.color });
 		
 		if piece.breed == Pieces::Pawn && (ending.row - starting.row).abs() == 2 {
 			let inc = match piece.color {
@@ -683,22 +684,33 @@ impl Board {
 	fn filter_check_moves(
 		&self,
 		piece_coord: Coordinate,
-		moves: Vec<Coordinate>,
-	) -> Vec<Coordinate> {
+		moves: Vec<i8>,
+	) -> Vec<i8> {
+		let piece = self.get_piece(piece_coord);
+
+        if piece.is_none() {
+            return moves;
+        }
+
+        let piece = piece.unwrap();
+
+        // Cloning a board
 		let mut clone_board = Board::new();
 		clone_board.load_fen(&self.get_fen()[..]);
-		let piece = self.board[piece_coord.row as usize][piece_coord.col as usize];
-		let mut result: Vec<Coordinate> = Vec::new();
+
+		let mut result: Vec<i8> = Vec::new();
 		
 		for move_coord in moves {
-			let captured = clone_board.apply_move(piece_coord, move_coord);
+			let captured = clone_board.apply_move(piece_coord, Coordinate::from_number(move_coord));
 			if !clone_board.is_in_check(piece.color) {
 				result.push(move_coord);
 			}
+
 			// Undo the move by swapping the pieces back
-			clone_board.apply_move(move_coord, piece_coord);
+			clone_board.apply_move(Coordinate::from_number(move_coord), piece_coord);
+
 			if captured != None {
-				clone_board.place_piece(captured.unwrap(), move_coord);
+				clone_board.place_piece(captured.unwrap(), Coordinate::from_number(move_coord));
 			}
 		}
 		
@@ -881,7 +893,7 @@ impl Board {
 			None => {}
 		}
 		
-		return moves;
+		return self.filter_check_moves(coord, moves);
 	}
 	
 	pub fn is_in_check(&self, color: Color) -> bool {
@@ -906,7 +918,7 @@ impl Board {
 	}
 	
 	pub fn is_in_checkmate(&mut self, color: Color) -> bool {
-		if self.get_king_coord(color) == None {
+		if self.get_king_coord(color).is_none() {
 			return false;
 		}
 		
