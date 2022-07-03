@@ -284,10 +284,6 @@ mod tests {
         assert_eq!(moves.len(), 7);
         board.clear();
 
-        // NOTE: These tests will not work until the proper filtering of moves that lead to check
-        // So I will comment them for now and comment tests that require that specific feature
-
-        /*
         // Seventh case: King in the middle, with an enemy piece in the way
         // * . .
         // . K q
@@ -331,7 +327,6 @@ mod tests {
         moves = board.get_moves(coord!(4, 4));
         assert_eq!(moves.len(), 4);
         board.clear();
-        */
     }
 
     #[test]
@@ -795,8 +790,6 @@ mod tests {
         board.clear();
     }
 
-    // NOTE: Not implemented filtering of moves that lead to check, no sense to run it =D
-    /*
     #[test]
     fn moves_that_lead_to_check() {
       let mut board = Board::new();
@@ -824,10 +817,8 @@ mod tests {
       board.load_fen("8/8/8/8/1KRr4/8/8/8 w - - 0 1");
       assert_eq!(board.get_moves(coord!(4, 2)).len(), 1);
     }
-      */
 
     // NOTE: Not implemented filtering of moves that lead to check, no sense to run it =D
-    /*
     #[test]
     fn is_checkmate() {
       let mut board = Board::new();
@@ -841,22 +832,58 @@ mod tests {
          true
       */
 
+      println!("Double rook mate");
       board.load_fen("K6r/7r/8/8/8/8/8/8 w - - 0 1");
       assert_eq!(board.is_in_checkmate(Color::White), true);
       board.clear();
 
       // Case 2: Anderssen's mate
-      board.load_fen("6kR/6P1/5K2/8/8/8/8/8 w - - 0 1");
+      /*
+       * . k R
+       * . P .
+       * K . .
+       */
+
+      println!("Anderssen's mate");
+      // board.load_fen("6kR/6P1/5K2/8/8/8/8/8 w - - 0 1");
+      board.place_piece(piece!(King, Black), coord!(0, 6));
+      board.place_piece(piece!(Rook, White), coord!(0, 7));
+      board.place_piece(piece!(Pawn, White), coord!(1, 6));
+      board.place_piece(piece!(King, White), coord!(2, 5));
       assert_eq!(board.is_in_checkmate(Color::Black), true);
       board.clear();
 
       // Case 3: Arabian mate
+
+      println!("Arabian mate");
       board.load_fen("7k/7R/5N2/8/8/8/8/8 w - - 0 1");
       board.clear();
 
       // Case N: Not a mate
+      println!("Not a mate");
       board.load_fen("K6r/7r/6N1/8/8/8/8/8 w - - 0 1");
       assert_eq!(board.is_in_checkmate(Color::White), false);
     }
-    */
+
+    #[test]
+    fn get_king_coord() {
+        let mut board = Board::new();
+        let king = piece!(King, White);
+
+        macro_rules! test {
+            ($x: expr, $y: expr) => {
+                board.place_piece(king, coord!($x, $y));
+                assert_eq!(board.get_king_coord(Color::White), Some(coord!($x, $y)));
+                board.clear();
+            };
+        }
+        
+        test!(1, 1);
+        test!(2, 7);
+        test!(3, 5);
+        test!(5, 2);
+        test!(5, 1);
+        test!(6, 6);
+        test!(6, 3);
+    }
 }
