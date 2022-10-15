@@ -215,7 +215,7 @@ mod tests {
 	fn king_moves() {
 		let mut board = Board::new();
 		let king = piece!(King, White);
-		let mut moves: Vec<i8>;
+		let mut moves: Vec<Coordinate>;
 
 		// Case 1: King in the top left
 		/*
@@ -428,7 +428,7 @@ mod tests {
 		14 valid moves
 		*/
 
-		moves = board.linear_moves(coord!(0, 0), Color::White);
+		moves = board.get_linear_moves(coord!(0, 0), Color::White);
 		assert_eq!(moves.len(), 14);
 
 		// Case 2: Top right
@@ -440,7 +440,7 @@ mod tests {
 		14 valid moves
 		*/
 
-		moves = board.linear_moves(coord!(0, 7), Color::White);
+		moves = board.get_linear_moves(coord!(0, 7), Color::White);
 		assert_eq!(moves.len(), 14);
 
 		// Case 3: Bottom left
@@ -452,7 +452,7 @@ mod tests {
 		14 valid moves
 		*/
 
-		moves = board.linear_moves(coord!(7, 0), Color::White);
+		moves = board.get_linear_moves(coord!(7, 0), Color::White);
 		assert_eq!(moves.len(), 14);
 
 		// Case 4: Bottom right
@@ -464,7 +464,7 @@ mod tests {
 		14 valid moves
 		*/
 
-		moves = board.linear_moves(coord!(7, 7), Color::White);
+		moves = board.get_linear_moves(coord!(7, 7), Color::White);
 		assert_eq!(moves.len(), 14);
 
 		// Case 5: Middle
@@ -477,7 +477,7 @@ mod tests {
 		14 valid moves
 		*/
 
-		moves = board.linear_moves(coord!(3, 3), Color::White);
+		moves = board.get_linear_moves(coord!(3, 3), Color::White);
 		assert_eq!(moves.len(), 14);
 
 		// Case 6: Friendly piece on the way
@@ -491,7 +491,7 @@ mod tests {
 		*/
 
 		board.place_piece(piece!(Pawn, White), coord!(6, 6));
-		moves = board.linear_moves(coord!(6, 5), Color::White);
+		moves = board.get_linear_moves(coord!(6, 5), Color::White);
 		assert_eq!(moves.len(), 12);
 
 		// Case 7: Enemy piece on the way
@@ -505,7 +505,7 @@ mod tests {
 		*/
 
 		board.place_piece(piece!(Pawn, Black), coord!(6, 6));
-		moves = board.linear_moves(coord!(6, 5), Color::White);
+		moves = board.get_linear_moves(coord!(6, 5), Color::White);
 		assert_eq!(moves.len(), 13);
 	}
 
@@ -513,7 +513,7 @@ mod tests {
 	fn knight_moves() {
 		let mut board: Board = Board::new();
 		let knight = piece!(Knight, White);
-		let mut moves: Vec<i8>;
+		let mut moves: Vec<Coordinate>;
 
 		// Case 1: Top left
 		/*
@@ -652,7 +652,7 @@ mod tests {
 	fn pawn_moves() {
 		let mut board: Board = Board::new();
 		let pawn = piece!(Pawn, White);
-		let mut moves: Vec<i8>;
+		let mut moves: Vec<Coordinate>;
 
 		// Case 1: Pawn in the middle
 		/*
@@ -769,7 +769,7 @@ mod tests {
 
 		board.place_piece(pawn, coord!(3, 3));
 		board.place_piece(piece!(Pawn, Black), coord!(3, 4));
-		board.en_passant_target_sq = Some(coord!(2, 4).as_number());
+		board.en_passant_target_sq = Some(coord!(2, 4));
 		moves = board.get_moves(coord!(3, 3));
 		assert_eq!(moves.len(), 2);
 		board.reset();
