@@ -345,35 +345,16 @@ impl Board {
 
         // match the Piece to the correct character
         use Pieces::*;
-        match piece.breed {
-          King => {
-            print!("{} ", pieces_str[0]);
-          },
-
-          Queen => {
-            print!("{} ", pieces_str[1]);
-          },
-
-          Rook => {
-            print!("{} ", pieces_str[2]);
-          },
-
-          Bishop => {
-            print!("{} ", pieces_str[3]);
-          },
-
-          Knight => {
-            print!("{} ", pieces_str[4]);
-          },
-
-          Pawn => {
-            print!("{} ", pieces_str[5]);
-          },
-
-          Empty => {
-            print!("\x1b[39;49m.\x1b[0m ");
-          },
-        }
+        print!("{} ",
+               match piece.breed {
+                   King => pieces_str[0],
+                   Queen => pieces_str[1],
+                   Rook => pieces_str[2],
+                   Bishop => pieces_str[3],
+                   Knight => pieces_str[4],
+                   Pawn => pieces_str[5],
+                   Empty => "\x1b[39;49m.\x1b[0m",
+               });
       }
       println!();
     }
@@ -605,17 +586,15 @@ impl Board {
     coord: Coordinate,
     new_piece: Piece,
   ) -> Option<Piece> {
+    let old_piece = self.get_piece(coord);
+    self.board[coord.row as usize][coord.col as usize] = new_piece;
+
     // Returns piece from square if there was a piece
-    match self.get_piece(coord) {
-      Some(piece) => {
-        self.board[coord.row as usize][coord.col as usize] = new_piece;
-        return Some(piece);
-      },
-      None => {
-        self.board[coord.row as usize][coord.col as usize] = new_piece;
-        return None;
-      },
-    }
+    return
+        match old_piece {
+          Some(piece) => Some(piece),
+          None => None,
+        };
   }
 
   pub fn apply_move(
