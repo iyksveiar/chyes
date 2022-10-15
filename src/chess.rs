@@ -765,20 +765,20 @@ impl Board {
             */
 
             let mut check = |diff: i8| {
-                let new_coord = Coordinate::from_number(position + diff);
+              let new_coord = Coordinate::from_number(position + diff);
 
-                // Check if the new coordinate is valid
-                if (new_coord.row >= 0 && new_coord.row <= 7) &&
-                   (new_coord.col >= 0 && new_coord.col <= 7) &&
-                   (new_coord.row - coord.row).abs() < 2 &&
-                   (new_coord.col - coord.col).abs() < 2
-                {
-                  let on_way_piece = self.get_piece(new_coord);
+              // Check if the new coordinate is valid
+              if (new_coord.row >= 0 && new_coord.row <= 7)
+                && (new_coord.col >= 0 && new_coord.col <= 7)
+                && (new_coord.row - coord.row).abs() < 2
+                && (new_coord.col - coord.col).abs() < 2
+              {
+                let on_way_piece = self.get_piece(new_coord);
 
-                  if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color {
-                      moves.push(new_coord);
-                  }
+                if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color {
+                  moves.push(new_coord);
                 }
+              }
             };
 
             check(7);
@@ -791,38 +791,29 @@ impl Board {
             check(-7);
           },
           Queen => {
-            moves.append(
-              &mut self.get_linear_moves(coord, piece.color)
-            );
-            moves.append(
-              &mut self.get_diagonal_moves(coord, piece.color)
-            );
+            moves.append(&mut self.get_linear_moves(coord, piece.color));
+            moves.append(&mut self.get_diagonal_moves(coord, piece.color));
           },
 
-          Rook => {
-            moves = self.get_linear_moves(coord, piece.color)
-          },
+          Rook => moves = self.get_linear_moves(coord, piece.color),
 
-          Bishop => {
-            moves = self.get_diagonal_moves(coord, piece.color)
-          },
+          Bishop => moves = self.get_diagonal_moves(coord, piece.color),
 
           Knight => {
             let mut check = |diff: i8| {
-                let new_coord = Coordinate::from_number(position + diff);
+              let new_coord = Coordinate::from_number(position + diff);
 
+              if (new_coord.row >= 0 && new_coord.row <= 7)
+                && (new_coord.col >= 0 && new_coord.col <= 7)
+                && (new_coord.row - coord.row).abs() < 3
+                && (new_coord.col - coord.col).abs() < 3
+              {
+                let on_way_piece = self.get_piece(new_coord);
 
-                if (new_coord.row >= 0 && new_coord.row <= 7) &&
-                   (new_coord.col >= 0 && new_coord.col <= 7) &&
-                   (new_coord.row - coord.row).abs() < 3 &&
-                   (new_coord.col - coord.col).abs() < 3
-                {
-                  let on_way_piece = self.get_piece(new_coord);
-
-                  if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color {
-                      moves.push(new_coord);
-                  }
+                if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color {
+                  moves.push(new_coord);
                 }
+              }
             };
 
             check(10);
@@ -914,10 +905,7 @@ impl Board {
       Color::White => self.black_pieces.iter(),
       Color::Black => self.white_pieces.iter(),
     } {
-      if self
-        .get_moves(*coord)
-        .contains(&king_coord.unwrap())
-      {
+      if self.get_moves(*coord).contains(&king_coord.unwrap()) {
         return true;
       }
     }
