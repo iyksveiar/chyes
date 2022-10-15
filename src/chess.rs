@@ -104,8 +104,8 @@ pub struct Board {
   pub board: [[Piece; 8]; 8], // 2D array of Pieces
   pub turn: Color,
   pub castling_rights: [bool; 4], // 0: white king side, 1: white queen side, 2: black king side, 3: black queen side
-  pub white_pieces: Box<HashMap<i8, Piece>>,
-  pub black_pieces: Box<HashMap<i8, Piece>>,
+  pub white_pieces: Box<HashMap<Coordinate, Piece>>,
+  pub black_pieces: Box<HashMap<Coordinate, Piece>>,
   pub en_passant_target_sq: Option<i8>,
   halfmove_clock: i8,
   fullmove_number: i8,
@@ -327,7 +327,7 @@ impl Board {
       Color::White => &mut self.white_pieces,
       Color::Black => &mut self.black_pieces,
     }
-    .insert(coord.as_number(), piece);
+    .insert(coord, piece);
   }
 
   pub fn draw(&self) {
@@ -640,13 +640,13 @@ impl Board {
       Color::White => &mut self.white_pieces,
       Color::Black => &mut self.black_pieces,
     }
-    .insert(ending.as_number(), piece);
+    .insert(ending, piece);
 
     match piece.color {
       Color::White => &mut self.white_pieces,
       Color::Black => &mut self.black_pieces,
     }
-    .remove(&(starting.as_number()));
+    .remove(&starting);
 
     match captured_piece {
       Some(piece) => {
@@ -654,7 +654,7 @@ impl Board {
           Color::White => &mut self.black_pieces,
           Color::Black => &mut self.white_pieces,
         }
-        .remove(&(ending.as_number()));
+        .remove(&ending);
       },
       None => {},
     };
@@ -673,14 +673,12 @@ impl Board {
     &self,
     color: Color,
   ) -> Option<Coordinate> {
-    for (num, piece) in match color {
+    for (coord, piece) in match color {
       Color::White => &self.white_pieces,
       Color::Black => &self.black_pieces,
-    }
-    .iter()
-    {
+    }.iter() {
       if piece.breed == Pieces::King {
-        return Some(Coordinate::from_number(*num));
+        return Some(*coord);
       }
     }
 
@@ -925,7 +923,7 @@ impl Board {
       Color::Black => self.white_pieces.iter(),
     } {
       if self
-        .get_moves(Coordinate::from_number(*coord))
+        .get_moves(*coord)
         .contains(&king_coord.unwrap().as_number())
       {
         return true;
@@ -943,11 +941,11 @@ impl Board {
       return false;
     }
 
-    for (num, _) in match color {
+    for (coord, _) in match color {
       Color::White => self.white_pieces.iter(),
       Color::Black => self.black_pieces.iter(),
     } {
-      if self.get_moves(Coordinate::from_number(*num)).len() != 0 {
+      if self.get_moves(*coord).len() != 0 {
         return false;
       }
     }
