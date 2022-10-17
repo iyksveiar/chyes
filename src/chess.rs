@@ -349,7 +349,7 @@ impl Board {
             Bishop => pieces_str[3],
             Knight => pieces_str[4],
             Pawn => pieces_str[5],
-            Empty => "\x1b[39;49m.\x1b[0m",
+            Empty => ".",
           }
         );
       }
