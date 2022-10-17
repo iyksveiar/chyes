@@ -584,6 +584,12 @@ impl Board {
     new_piece: Piece,
   ) -> Option<Piece> {
     let old_piece = self.get_piece(coord);
+
+    // Checking if the coordinate is valid
+    if coord.row < 0 || coord.row > 7 || coord.col < 0 || coord.col > 7 {
+      return None;
+    }
+
     self.board[coord.row as usize][coord.col as usize] = new_piece;
 
     // Returns piece from square if there was a piece
@@ -685,89 +691,96 @@ impl Board {
     return None;
   }
 
-  fn filter_check_moves(
-    &self,
-    piece_coord: Coordinate,
-    moves: Vec<Coordinate>,
-  ) -> Vec<Coordinate> {
-    let piece = self.get_piece(piece_coord);
-
-    return match piece {
-      Some(piece) => {
-        // Cloning a board
-        let mut clone_board = Board::new();
-        clone_board.load_fen(&self.get_fen()[..]);
-
-        let mut result: Vec<Coordinate> = Vec::new();
-
-        for move_coord in moves {
-          let captured = clone_board.apply_move(piece_coord, move_coord);
-
-          if !clone_board.is_in_check(piece.color) {
-            result.push(move_coord);
-          }
-
-          // Undo the move by swapping the pieces back
-          clone_board.apply_move(move_coord, piece_coord);
-
-          if captured != None {
-            clone_board.place_piece(captured.unwrap(), move_coord);
-          }
-        }
-
-        result
-      },
-      None => moves,
-    };
-  }
-
   pub fn get_piece(
     &self,
     coord: Coordinate,
   ) -> Option<Piece> {
     // It returns None if the piece you are trying to get is empty, so there is no need to
     // check for a piece breed all the time if you can just check for None =D
-    let piece = self.board[coord.row as usize][coord.col as usize];
-    return match piece.breed {
-      Pieces::Empty => None,
-      _ => Some(piece),
-    };
+
+    // Checking if the coordinate is valid
+    if (coord.row >= 0 && coord.col >= 0) && (coord.row < 8 && coord.col < 8) {
+      let piece = self.board[coord.row as usize][coord.col as usize];
+
+      return match piece.breed {
+        Pieces::Empty => None,
+        _ => Some(piece),
+      };
+    }
+
+    return None;
+  }
+
+  pub fn filter_check_moves(
+    &self,
+    moves: &mut Vec<Coordinate>,
+    coord: Coordinate,
+  ) {
+    let piece = self.get_piece(coord).unwrap();
+    let mut board_copy = Box::new(self.clone());
+
+    // If the piece is king, you have to check all the moves
+    // If the piece is not a king, it is enough to check only one move
+
+    match piece.breed {
+      Pieces::King => {
+        let mut index = 0;
+
+        while index < moves.len() {
+          let move_coord = moves[index];
+
+          let captured = board_copy.apply_move(coord, move_coord);
+
+          if board_copy.is_in_check(piece.color) {
+            moves.remove(index);
+          } else {
+            index += 1;
+          }
+
+          // Undo the move
+          board_copy.apply_move(move_coord, coord);
+
+          if captured.is_some() {
+            board_copy.place_piece(captured.unwrap(), move_coord);
+          }
+        }
+      },
+      _ => {
+        let move_coord = moves[0];
+
+        board_copy.apply_move(coord, move_coord);
+
+        if board_copy.is_in_check(piece.color) {
+          moves.clear();
+        }
+      },
+    }
   }
 
   pub fn get_moves(
     &self,
     coord: Coordinate,
   ) -> Vec<Coordinate> {
-    /*
-      56 57 58 59 60 61 62 63
-      48 49 50 51 52 53 54 55
-      40 41 42 43 44 45 46 47
-      32 33 34 35 36 37 38 39
-      24 25 26 27 28 29 30 31
-      16 17 18 19 20 21 22 23
-      08 09 10 11 12 13 14 15
-      00 01 02 03 04 05 06 07
-    */
-
     let piece = self.get_piece(coord);
-    let position = coord.as_number();
-    let mut moves: Vec<Coordinate> = Vec::new();
 
-    match piece {
+    return match piece {
       Some(piece) => {
+        // Get default moves for the piece
+        // Filter coordinates that hit friendly pieces
+        // Create a copy of the board
+        // Apply the move to the copy
+        // Check if friendly king is in check
+        // If it is, remove the move from the list
+
+        let mut moves = Vec::new();
+
         use Pieces::*;
         match piece.breed {
           King => {
-            /*
-              +7 +8 +9
-              -1  0 +1
-              -9 -8 -7
-            */
+            let mut check_coord = |diff: i8| {
+              let new_coord = Coordinate::from_number(coord.as_number() + diff);
 
-            let mut check = |diff: i8| {
-              let new_coord = Coordinate::from_number(position + diff);
-
-              // Check if the new coordinate is valid
+              // Checking if new coorddinate is in the board
               if (new_coord.row >= 0 && new_coord.row <= 7)
                 && (new_coord.col >= 0 && new_coord.col <= 7)
                 && (new_coord.row - coord.row).abs() < 2
@@ -775,34 +788,55 @@ impl Board {
               {
                 let on_way_piece = self.get_piece(new_coord);
 
-                if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color {
+                if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color
+                // You hit an enemy piece
+                {
                   moves.push(new_coord);
                 }
               }
             };
 
-            check(7);
-            check(9);
-            check(8);
-            check(-1);
-            check(1);
-            check(-9);
-            check(-8);
-            check(-7);
+            check_coord(1);
+            check_coord(-1);
+            check_coord(8);
+            check_coord(-8);
+            check_coord(9);
+            check_coord(-9);
+            check_coord(7);
+            check_coord(-7);
+
+            // Iterate over moves, apply them to the copy of the board
+            // and check if the king is in check
+
+            self.filter_check_moves(&mut moves, coord);
+
+            // TODO: Castling
           },
+
           Queen => {
-            moves.append(&mut self.get_linear_moves(coord, piece.color));
             moves.append(&mut self.get_diagonal_moves(coord, piece.color));
+            moves.append(&mut self.get_linear_moves(coord, piece.color));
+
+            self.filter_check_moves(&mut moves, coord);
           },
 
-          Rook => moves = self.get_linear_moves(coord, piece.color),
+          Rook => {
+            moves.append(&mut self.get_linear_moves(coord, piece.color));
 
-          Bishop => moves = self.get_diagonal_moves(coord, piece.color),
+            self.filter_check_moves(&mut moves, coord);
+          },
+
+          Bishop => {
+            moves.append(&mut self.get_diagonal_moves(coord, piece.color));
+
+            self.filter_check_moves(&mut moves, coord);
+          },
 
           Knight => {
-            let mut check = |diff: i8| {
-              let new_coord = Coordinate::from_number(position + diff);
+            let mut check_coord = |diff: i8| {
+              let new_coord = Coordinate::from_number(coord.as_number() + diff);
 
+              // Checking if new coorddinate is in the board
               if (new_coord.row >= 0 && new_coord.row <= 7)
                 && (new_coord.col >= 0 && new_coord.col <= 7)
                 && (new_coord.row - coord.row).abs() < 3
@@ -810,58 +844,63 @@ impl Board {
               {
                 let on_way_piece = self.get_piece(new_coord);
 
-                if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color {
+                if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color
+                // You hit an enemy piece
+                {
                   moves.push(new_coord);
                 }
               }
             };
 
-            check(10);
-            check(-6);
-            check(17);
-            check(-15);
-            check(15);
-            check(-17);
-            check(6);
-            check(-10);
+            check_coord(10);
+            check_coord(-6);
+            check_coord(17);
+            check_coord(-15);
+            check_coord(15);
+            check_coord(-17);
+            check_coord(6);
+            check_coord(-10);
+
+            self.filter_check_moves(&mut moves, coord);
           },
+
           Pawn => {
             let starting_row = if piece.color == Color::White { 6 } else { 1 };
             let inc = if piece.color == Color::White { 1 } else { -1 };
 
             // Checking the sqaure in front of the pawn
             if self
-              .get_piece(Coordinate::from_number(position + inc * 8))
+              .get_piece(Coordinate::from_number(coord.as_number() + inc * 8))
               .is_none()
             {
-              moves.push(Coordinate::from_number(position + inc * 8));
+              moves.push(Coordinate::from_number(coord.as_number() + inc * 8));
 
               // Checking if the pawn is in the starting row
               if coord.row == starting_row {
                 // If the second square in front of the pawn is empty, add a move
                 if self
-                  .get_piece(Coordinate::from_number(position + inc * 16))
+                  .get_piece(Coordinate::from_number(coord.as_number() + inc * 16))
                   .is_none()
                 {
-                  moves.push(Coordinate::from_number(position + inc * 16));
+                  moves.push(Coordinate::from_number(coord.as_number() + inc * 16));
                 }
               }
             }
 
             // Attacking moves
-            match self.get_piece(Coordinate::from_number(position + inc * 7)) {
+            match self.get_piece(Coordinate::from_number(coord.as_number() + inc * 7)) {
               Some(under_attack_piece) => {
                 if under_attack_piece.color != piece.color {
-                  moves.push(Coordinate::from_number(position + inc * 7));
+                  moves.push(Coordinate::from_number(coord.as_number() + inc * 7));
                 }
               },
               None => {},
             }
 
-            match self.get_piece(Coordinate::from_number(position + inc * 9)) {
+            match self.get_piece(Coordinate::from_number(coord.as_number() + inc * 9)) {
               Some(under_attack_piece) => {
                 if under_attack_piece.color != piece.color {
-                  moves.push(Coordinate::from_number(position + inc * 9));
+                  moves.push(Coordinate::from_number(coord.as_number() + inc * 9));
                 }
               },
               None => {},
@@ -870,12 +909,12 @@ impl Board {
             // En passant
             match self.en_passant_target_sq {
               Some(en_passant_target_sq) => {
-                if Coordinate::from_number(position + inc * 7) == en_passant_target_sq {
-                  moves.push(Coordinate::from_number(position + inc * 7));
+                if Coordinate::from_number(coord.as_number() + inc * 7) == en_passant_target_sq {
+                  moves.push(Coordinate::from_number(coord.as_number() + inc * 7));
                 }
 
-                if Coordinate::from_number(position + inc * 9) == en_passant_target_sq {
-                  moves.push(Coordinate::from_number(position + inc * 9));
+                if Coordinate::from_number(coord.as_number() + inc * 9) == en_passant_target_sq {
+                  moves.push(Coordinate::from_number(coord.as_number() + inc * 9));
                 }
               },
               None => {},
@@ -883,12 +922,12 @@ impl Board {
           },
 
           Empty => {},
-        }
-      },
-      None => {},
-    }
+        };
 
-    return self.filter_check_moves(coord, moves);
+        moves
+      },
+      None => Vec::new(),
+    };
   }
 
   pub fn is_in_check(
@@ -898,6 +937,7 @@ impl Board {
     let king_coord: Option<Coordinate> = self.get_king_coord(color);
 
     if king_coord.is_none() {
+      // No king found on the board
       return false;
     }
 
@@ -917,15 +957,31 @@ impl Board {
     &mut self,
     color: Color,
   ) -> bool {
-    if self.get_king_coord(color).is_none() {
+    // Get king coordinate
+    let king_coord: Option<Coordinate> = self.get_king_coord(color);
+
+    if king_coord.is_none() {
+      // No king found on the board
       return false;
     }
 
+    // If king not in the check, return false
+    if !self.is_in_check(color) {
+      return false;
+    }
+
+    // If king can move, return false
+    if self.get_moves(king_coord.unwrap()).len() > 0 {
+      return false;
+    }
+
+    // If any piece can block the check, return false
     for (coord, _) in match color {
       Color::White => self.white_pieces.iter(),
       Color::Black => self.black_pieces.iter(),
     } {
-      if self.get_moves(*coord).len() != 0 {
+      // Get moves for each coordinate, if length > 0, return false
+      if self.get_moves(*coord).len() > 0 {
         return false;
       }
     }
