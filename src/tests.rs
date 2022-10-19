@@ -20,14 +20,6 @@ macro_rules! piece {
 #[cfg(test)]
 mod tests {
   use super::*;
-  #[test]
-  fn new_board() {
-    let board = Board::new();
-    assert_eq!(board.board.len(), 8);
-    for row in 0..8 {
-      assert_eq!(board.board[row].len(), 8);
-    }
-  }
 
   #[test]
   fn is_in_check() {
@@ -198,17 +190,17 @@ mod tests {
     board.reset();
 
     // Case 11
-    board.load_fen("4r3/8/8/4K2r/8/8/8/8 w - - 0 1");
+    board.load_fen(String::from("4r3/8/8/4K2r/8/8/8/8 w - - 0 1"));
     assert_eq!(board.is_in_check(Color::White), true);
     board.reset();
   }
 
   #[test]
   fn coordinates_to_notation() {
-    assert_eq!(coord!(1, 1).to_string(), "b7".to_string());
-    assert_eq!(coord!(3, 4).to_string(), "e5".to_string());
-    assert_eq!(coord!(5, 7).to_string(), "h3".to_string());
-    assert_eq!(coord!(7, 7).to_string(), "h1".to_string());
+    assert_eq!(coord!(1, 1).to_notation(), "b7".to_string());
+    assert_eq!(coord!(3, 4).to_notation(), "e5".to_string());
+    assert_eq!(coord!(5, 7).to_notation(), "h3".to_string());
+    assert_eq!(coord!(7, 7).to_notation(), "h1".to_string());
   }
 
   #[test]
@@ -307,7 +299,7 @@ mod tests {
     0 valid moves
     */
 
-    board.load_fen("2r1r3/8/7r/3K4/7r/8/8/8 w - - 0 1");
+    board.load_fen(String::from("2r1r3/8/7r/3K4/7r/8/8/8 w - - 0 1"));
     moves = board.get_moves(coord!(3, 3));
     assert_eq!(moves.len(), 0);
     board.reset();
@@ -343,7 +335,7 @@ mod tests {
     7 valid moves
     */
 
-    moves = board.get_diagonal_moves(coord!(0, 0), Color::White);
+    moves = board.get_moves(coord!(0, 0));
     assert_eq!(moves.len(), 7);
 
     // Case 2: Top right
@@ -355,7 +347,7 @@ mod tests {
     7 valid moves
     */
 
-    moves = board.get_diagonal_moves(coord!(0, 7), Color::White);
+    moves = board.get_moves(coord!(0, 7));
     assert_eq!(moves.len(), 7);
 
     // Case 3: Bottom left
@@ -367,7 +359,7 @@ mod tests {
     7 valid moves
     */
 
-    moves = board.get_diagonal_moves(coord!(7, 0), Color::White);
+    moves = board.get_moves(coord!(7, 0));
     assert_eq!(moves.len(), 7);
 
     // Case 4: Bottom right
@@ -379,7 +371,7 @@ mod tests {
     7 valid moves
     */
 
-    moves = board.get_diagonal_moves(coord!(7, 7), Color::White);
+    moves = board.get_moves(coord!(7, 7));
     assert_eq!(moves.len(), 7);
 
     // Case 5: Middle
@@ -391,7 +383,7 @@ mod tests {
     13 valid moves
     */
 
-    moves = board.get_diagonal_moves(coord!(3, 3), Color::White);
+    moves = board.get_moves(coord!(3, 3));
     assert_eq!(moves.len(), 13);
 
     // Case 6: Friendly piece on the way
@@ -405,12 +397,12 @@ mod tests {
     */
 
     board.place_piece(piece!(Pawn, White), coord!(6, 6));
-    moves = board.get_diagonal_moves(coord!(5, 5), Color::White);
+    moves = board.get_moves(coord!(5, 5));
     assert_eq!(moves.len(), 9);
 
     // Case 7: Enemy piece on the way
     board.place_piece(piece!(Pawn, Black), coord!(6, 6));
-    moves = board.get_diagonal_moves(coord!(5, 5), Color::White);
+    moves = board.get_moves(coord!(5, 5));
     assert_eq!(moves.len(), 10);
   }
 
@@ -428,7 +420,7 @@ mod tests {
     14 valid moves
     */
 
-    moves = board.get_linear_moves(coord!(0, 0), Color::White);
+    moves = board.get_moves(coord!(0, 0));
     assert_eq!(moves.len(), 14);
 
     // Case 2: Top right
@@ -440,7 +432,7 @@ mod tests {
     14 valid moves
     */
 
-    moves = board.get_linear_moves(coord!(0, 7), Color::White);
+    moves = board.get_moves(coord!(0, 7));
     assert_eq!(moves.len(), 14);
 
     // Case 3: Bottom left
@@ -452,7 +444,7 @@ mod tests {
     14 valid moves
     */
 
-    moves = board.get_linear_moves(coord!(7, 0), Color::White);
+    moves = board.get_moves(coord!(7, 0));
     assert_eq!(moves.len(), 14);
 
     // Case 4: Bottom right
@@ -464,7 +456,7 @@ mod tests {
     14 valid moves
     */
 
-    moves = board.get_linear_moves(coord!(7, 7), Color::White);
+    moves = board.get_moves(coord!(7, 7));
     assert_eq!(moves.len(), 14);
 
     // Case 5: Middle
@@ -477,7 +469,7 @@ mod tests {
     14 valid moves
     */
 
-    moves = board.get_linear_moves(coord!(3, 3), Color::White);
+    moves = board.get_moves(coord!(3, 3));
     assert_eq!(moves.len(), 14);
 
     // Case 6: Friendly piece on the way
@@ -491,7 +483,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Pawn, White), coord!(6, 6));
-    moves = board.get_linear_moves(coord!(6, 5), Color::White);
+    moves = board.get_moves(coord!(6, 5));
     assert_eq!(moves.len(), 12);
 
     // Case 7: Enemy piece on the way
@@ -505,7 +497,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Pawn, Black), coord!(6, 6));
-    moves = board.get_linear_moves(coord!(6, 5), Color::White);
+    moves = board.get_moves(coord!(6, 5));
     assert_eq!(moves.len(), 13);
   }
 
@@ -785,7 +777,7 @@ mod tests {
     2 valid moves
     */
 
-    board.load_fen("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1");
+    board.load_fen(String::from("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1"));
     assert_eq!(moves.len(), 2);
     board.reset();
   }
@@ -802,7 +794,7 @@ mod tests {
        For pawn it is 0 valid moves
     */
 
-    board.load_fen("8/8/8/8/1KP3r1/8/8/8 w - - 0 1");
+    board.load_fen(String::from("8/8/8/8/1KP3r1/8/8/8 w - - 0 1"));
     assert_eq!(board.get_moves(coord!(4, 2)).len(), 0);
 
     // Case 2
@@ -814,7 +806,7 @@ mod tests {
       For rook it is 1 valid move
     */
 
-    board.load_fen("8/8/8/8/1KRr4/8/8/8 w - - 0 1");
+    board.load_fen(String::from("8/8/8/8/1KRr4/8/8/8 w - - 0 1"));
     assert_eq!(board.get_moves(coord!(4, 2)).len(), 1);
   }
 
@@ -833,7 +825,7 @@ mod tests {
     */
 
     println!("Double rook mate");
-    board.load_fen("K6r/7r/8/8/8/8/8/8 w - - 0 1");
+    board.load_fen(String::from("K6r/7r/8/8/8/8/8/8 w - - 0 1"));
     assert_eq!(board.is_in_checkmate(Color::White), true);
     board.reset();
 
@@ -845,7 +837,7 @@ mod tests {
      */
 
     println!("Anderssen's mate");
-    // board.load_fen("6kR/6P1/5K2/8/8/8/8/8 w - - 0 1");
+    // board.load_fen(String::from("6kR/6P1/5K2/8/8/8/8/8 w - - 0 1"));
     board.place_piece(piece!(King, Black), coord!(0, 6));
     board.place_piece(piece!(Rook, White), coord!(0, 7));
     board.place_piece(piece!(Pawn, White), coord!(1, 6));
@@ -856,12 +848,12 @@ mod tests {
     // Case 3: Arabian mate
 
     println!("Arabian mate");
-    board.load_fen("7k/7R/5N2/8/8/8/8/8 w - - 0 1");
+    board.load_fen(String::from("7k/7R/5N2/8/8/8/8/8 w - - 0 1"));
     board.reset();
 
     // Case N: Not a mate
     println!("Not a mate");
-    board.load_fen("K6r/7r/6N1/8/8/8/8/8 w - - 0 1");
+    board.load_fen(String::from("K6r/7r/6N1/8/8/8/8/8 w - - 0 1"));
     assert_eq!(board.is_in_checkmate(Color::White), false);
   }
 
