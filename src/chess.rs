@@ -36,8 +36,8 @@ impl Coordinate {
   // (0, 0) is the top left corner of the board
 
   pub fn to_notation(&self) -> String {
-    // a8 -> (0, 0)
-    // h1 -> (7, 7)
+    // (0, 0) -> "a8"
+    // (7, 7) -> "h1"
 
     let mut notation = String::new();
 
@@ -45,7 +45,7 @@ impl Coordinate {
     notation.push((self.col + 97) as char);
 
     // Add the row
-    notation.push((self.row + 49) as char); // NOTE: Not 48, because we want 1 to be 1, not 0
+    notation.push((56 - self.row) as char);
 
     return notation;
   }
@@ -109,6 +109,7 @@ impl Coordinate {
 }
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum Pieces {
   King,
   Queen,
@@ -119,12 +120,14 @@ pub enum Pieces {
 }
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum Color {
   Black,
   White,
 }
 
 #[derive(Hash, Clone, Copy)]
+#[derive(Debug)]
 pub struct Piece {
   pub breed: Pieces,
   pub color: Color,
@@ -379,7 +382,7 @@ impl Board {
     return old_piece;
   }
 
-  fn get_piece(
+  pub fn get_piece(
     &self,
     coordinate: &Coordinate,
   ) -> Option<Piece> {
@@ -438,29 +441,62 @@ impl Board {
     let color = self.get_piece(&coord).expect("Couldn't get piece").color;
 
     let mut moves = Vec::new();
-    let numeric = coord.as_number(); // Numeric representation of the coordinate
+    let numeric: u8 = coord.as_number(); // Numeric representation of the coordinate
+
+    /*
+     * Loop trough depth
+     * Loop trough deltas, using while loop and index variable, so it is simple to remove elements
+     * Generate the new coordinate
+     * Validate the new coordinate, not in numerical form, so that we can check if the piece is on the board
+     * Check what piece is standing on the new coordinate
+     * If there is no piece, add the move
+     * If there is a friendly piece, remove the delta from the deltas vector
+     * If there is an enemy piece, add the move and remove the delta from the deltas vector
+     */
 
     for depth in 1..=max_depth {
-      let mut index = 0;
-      while index < deltas.len() {
-        let new_numeric = numeric as i8 + deltas[index] * depth as i8;
+      let mut i = 0;
 
-        if new_numeric >= 0 && new_numeric < 64 {
-          let new_coord = Coordinate::from_number(new_numeric as u8).unwrap();
+      while i < deltas.len() {
+        let delta = deltas[i];
+        let new_numeric = numeric as i8 + delta as i8 * depth as i8;
 
-          if let Some(piece) = self.get_piece(&new_coord) {
-            if piece.color != color {
-              moves.push(new_coord);
-            }
-
-            deltas.remove(index);
-            break;
-          } else {
-            moves.push(new_coord);
-          }
+        if new_numeric < 0 || new_numeric > 63 {
+          deltas.remove(i);
+          continue;
         }
 
-        index += 1;
+        let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+
+        match new_coord.is_valid() {
+          Ok(_) => (),
+          Err(()) => {
+            deltas.remove(i);
+            continue;
+          },
+        }
+
+        if (new_coord.row as i8 - coord.row as i8).abs() != depth as i8 ||
+           (new_coord.col as i8 - coord.col as i8).abs() != depth as i8 {
+          deltas.remove(i);
+          continue;
+        }
+
+        let piece = self.get_piece(&new_coord);
+
+        match piece {
+          Some(piece) => {
+            if piece.color == color {
+              deltas.remove(i);
+            } else {
+              moves.push(new_coord);
+              deltas.remove(i);
+            }
+          },
+          None => moves.push(new_coord),
+        }
+
+        i += 1;
       }
     }
 
