@@ -335,6 +335,7 @@ mod tests {
     7 valid moves
     */
 
+    board.place_piece(piece!(Bishop, White), coord!(0, 0));
     moves = board.get_moves(coord!(0, 0));
     assert_eq!(moves.len(), 7);
 
@@ -347,6 +348,8 @@ mod tests {
     7 valid moves
     */
 
+    board.reset();
+    board.place_piece(piece!(Bishop, White), coord!(0, 7));
     moves = board.get_moves(coord!(0, 7));
     assert_eq!(moves.len(), 7);
 
@@ -359,6 +362,8 @@ mod tests {
     7 valid moves
     */
 
+    board.reset();
+    board.place_piece(piece!(Bishop, White), coord!(7, 0));
     moves = board.get_moves(coord!(7, 0));
     assert_eq!(moves.len(), 7);
 
@@ -371,6 +376,8 @@ mod tests {
     7 valid moves
     */
 
+    board.reset();
+    board.place_piece(piece!(Bishop, White), coord!(7, 7));
     moves = board.get_moves(coord!(7, 7));
     assert_eq!(moves.len(), 7);
 
@@ -383,6 +390,8 @@ mod tests {
     13 valid moves
     */
 
+    board.reset();
+    board.place_piece(piece!(Bishop, White), coord!(3, 3));
     moves = board.get_moves(coord!(3, 3));
     assert_eq!(moves.len(), 13);
 
@@ -396,12 +405,16 @@ mod tests {
     10 valid moves
     */
 
+    board.reset();
     board.place_piece(piece!(Pawn, White), coord!(6, 6));
+    board.place_piece(piece!(Bishop, White), coord!(5, 5));
     moves = board.get_moves(coord!(5, 5));
     assert_eq!(moves.len(), 9);
 
     // Case 7: Enemy piece on the way
+    board.reset();
     board.place_piece(piece!(Pawn, Black), coord!(6, 6));
+    board.place_piece(piece!(Bishop, White), coord!(5, 5));
     moves = board.get_moves(coord!(5, 5));
     assert_eq!(moves.len(), 10);
   }
