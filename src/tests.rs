@@ -28,13 +28,13 @@ mod tests {
 
     // Case 1: King in the middle
     /*
-    . . . . .
-    . . . . .
-    . . K . .
-    . . . . .
-    . . . . .
+      . . . . .
+      . . . . .
+      . . K . .
+      . . . . .
+      . . . . .
 
-    false
+      false
     */
 
     board.place_piece(king, coord!(3, 3));
@@ -43,13 +43,13 @@ mod tests {
 
     // Case 2
     /*
-    q . . . .
-    . . . . .
-    . . K . .
-    . . . . .
-    . . . . .
+      q . . . .
+      . . . . .
+      . . K . .
+      . . . . .
+      . . . . .
 
-    true
+      true
     */
 
     board.place_piece(piece!(Queen, Black), coord!(0, 0));
@@ -59,13 +59,13 @@ mod tests {
 
     // Case 3
     /*
-    Q . . . .
-    . . . . .
-    . . K . .
-    . . . . .
-    . . . . .
+      Q . . . .
+      . . . . .
+      . . K . .
+      . . . . .
+      . . . . .
 
-    false
+      false
     */
 
     board.place_piece(piece!(Queen, White), coord!(0, 0));
@@ -75,13 +75,13 @@ mod tests {
 
     // Case 4
     /*
-    . . r . .
-    . . . . .
-    . . K . .
-    . . . . .
-    . . . . .
+      . . r . .
+      . . . . .
+      . . K . .
+      . . . . .
+      . . . . .
 
-    true
+      true
     */
 
     board.place_piece(king, coord!(3, 3));
@@ -91,13 +91,13 @@ mod tests {
 
     // Case 5
     /*
-    . . . . .
-    . . . . .
-    . . K . .
-    . . . . .
-    . . . k .
+      . . . . .
+      . . . . .
+      . . K . .
+      . . . . .
+      . . . k .
 
-    true
+      true
     */
 
     board.place_piece(king, coord!(3, 3));
@@ -107,13 +107,13 @@ mod tests {
 
     // Case 6
     /*
-    . . . . .
-    . . . p .
-    . . K . .
-    . . . . .
-    . . . . .
+      . . . . .
+      . . . p .
+      . . K . .
+      . . . . .
+      . . . . .
 
-    true
+      true
     */
 
     board.place_piece(king, coord!(3, 3));
@@ -123,13 +123,13 @@ mod tests {
 
     // Case 7
     /*
-    . r . r .
-    . . . . r
-    . . K . .
-    . . . . r
-    . . . . .
+      . r . r .
+      . . . . r
+      . . K . .
+      . . . . r
+      . . . . .
 
-    false
+      false
     */
 
     board.place_piece(king, coord!(3, 3));
@@ -142,13 +142,13 @@ mod tests {
 
     // Case 8
     /*
-    . . . . .
-    . . . . .
-    . . K . .
-    . . . . .
-    . . . . b
+      . . . . .
+      . . . . .
+      . . K . .
+      . . . . .
+      . . . . b
 
-    true
+      true
     */
 
     board.place_piece(king, coord!(3, 3));
@@ -158,13 +158,13 @@ mod tests {
 
     // Case 9
     /*
-    . . . . q
-    . . . P .
-    . . K . .
-    . . . . .
-    . . . . .
+      . . . . q
+      . . . P .
+      . . K . .
+      . . . . .
+      . . . . .
 
-    false
+      false
     */
 
     board.place_piece(king, coord!(4, 3));
@@ -175,13 +175,13 @@ mod tests {
 
     // Case 10
     /*
-    . . . . .
-    . . . . .
-    . . K . r
-    . . . . .
-    . . . . .
+      . . . . .
+      . . . . .
+      . . K . r
+      . . . . .
+      . . . . .
 
-    true
+      true
     */
 
     board.place_piece(king, coord!(3, 3));
@@ -190,7 +190,7 @@ mod tests {
     board.reset();
 
     // Case 11
-    board.load_fen(String::from("4r3/8/8/4K2r/8/8/8/8 w - - 0 1"));
+    board.load_fen(String::from("4r3/8/8/4K2r/8/8/8/8 w - - 0 1")).expect("Failed to load FEN");
     assert_eq!(board.is_in_check(Color::White), true);
     board.reset();
   }
@@ -214,17 +214,23 @@ mod tests {
       K *
       * * .
       . . .
+
+      3 valid moves
     */
+
     board.place_piece(king, coord!(0, 0));
     moves = board.get_moves(coord!(0, 0));
     assert_eq!(moves.len(), 3);
     board.reset();
 
     // Second case: King in the top right
-    // . * K
-    // . * *
-    // . . .
-    // 3 valid moves
+    /*
+      . * K
+      . * *
+      . . .
+
+      3 valid moves
+    */
 
     board.place_piece(king, coord!(0, 7));
     moves = board.get_moves(coord!(0, 7));
@@ -290,28 +296,28 @@ mod tests {
 
     // Eighth case: Rooks and King, stale mate
     /*
-    . r . r .
-    . . . . r
-    . . K . .
-    . . . . r
-    . . . . .
+      . r . r .
+      . . . . r
+      . . K . .
+      . . . . r
+      . . . . .
 
-    0 valid moves
+      0 valid moves
     */
 
-    board.load_fen(String::from("2r1r3/8/7r/3K4/7r/8/8/8 w - - 0 1"));
+    board.load_fen(String::from("2r1r3/8/7r/3K4/7r/8/8/8 w - - 0 1")).expect("Failed to load FEN");
     moves = board.get_moves(coord!(3, 3));
     assert_eq!(moves.len(), 0);
     board.reset();
 
     // Ninth case: King in the middle, with an enemy piece blocKing Some space
     /*
-    . . . .
-    . r . .
-    . . K *
-    . . * *
+      . . . .
+      . r . .
+      . . K *
+      . . * *
 
-    4 valid moves
+      4 valid moves
     */
 
     board.place_piece(king, coord!(4, 4));
@@ -328,11 +334,11 @@ mod tests {
 
     // Case 1: Top left
     /*
-    B . .
-    . * .
-    . . *
+      B . .
+      . * .
+      . . *
 
-    7 valid moves
+      7 valid moves
     */
 
     board.place_piece(piece!(Bishop, White), coord!(0, 0));
@@ -341,11 +347,11 @@ mod tests {
 
     // Case 2: Top right
     /*
-    . . B
-    . * .
-    * . .
+      . . B
+      . * .
+      * . .
 
-    7 valid moves
+      7 valid moves
     */
 
     board.reset();
@@ -355,11 +361,11 @@ mod tests {
 
     // Case 3: Bottom left
     /*
-    . . *
-    . * .
-    B . .
+      . . *
+      . * .
+      B . .
 
-    7 valid moves
+      7 valid moves
     */
 
     board.reset();
@@ -369,11 +375,11 @@ mod tests {
 
     // Case 4: Bottom right
     /*
-    * . .
-    . * .
-    . . B
+      * . .
+      . * .
+      . . B
 
-    7 valid moves
+      7 valid moves
     */
 
     board.reset();
@@ -383,11 +389,11 @@ mod tests {
 
     // Case 5: Middle
     /*
-    * . *
-    . B .
-    * . *
+      * . *
+      . B .
+      * . *
 
-    13 valid moves
+      13 valid moves
     */
 
     board.reset();
@@ -397,26 +403,34 @@ mod tests {
 
     // Case 6: Friendly piece on the way
     /*
-    * . * .
-    . B . .
-    * . p .
-    . . . .
+       * . *
+       . B .
+       * . P
 
-    10 valid moves
+       3 valid moves
+     */
+
+    board.reset();
+    board.place_piece(piece!(Pawn, White), coord!(2, 2));
+    board.place_piece(piece!(Bishop, White), coord!(1, 1));
+    moves = board.get_moves(coord!(1, 1));
+    assert_eq!(moves.len(), 3);
+
+    // Case 7: Enemy piece on the way
+    /*
+      * . * .
+      . B . .
+      * . p .
+      . . . .
+
+      10 valid moves
     */
 
     board.reset();
-    board.place_piece(piece!(Pawn, White), coord!(6, 6));
-    board.place_piece(piece!(Bishop, White), coord!(5, 5));
-    moves = board.get_moves(coord!(5, 5));
-    assert_eq!(moves.len(), 9);
-
-    // Case 7: Enemy piece on the way
-    board.reset();
-    board.place_piece(piece!(Pawn, Black), coord!(6, 6));
-    board.place_piece(piece!(Bishop, White), coord!(5, 5));
-    moves = board.get_moves(coord!(5, 5));
-    assert_eq!(moves.len(), 10);
+    board.place_piece(piece!(Pawn, Black), coord!(2, 2));
+    board.place_piece(piece!(Bishop, White), coord!(1, 1));
+    moves = board.get_moves(coord!(1, 1));
+    assert_eq!(moves.len(), 4);
   }
 
   #[test]
@@ -426,11 +440,11 @@ mod tests {
 
     // Case 1: Top left
     /*
-    R * *
-    * . .
-    * . .
+      R * *
+      * . .
+      * . .
 
-    14 valid moves
+      14 valid moves
     */
 
     moves = board.get_moves(coord!(0, 0));
@@ -438,11 +452,11 @@ mod tests {
 
     // Case 2: Top right
     /*
-    * * R
-    . . *
-    . . *
+      * * R
+      . . *
+      . . *
 
-    14 valid moves
+      14 valid moves
     */
 
     moves = board.get_moves(coord!(0, 7));
@@ -450,11 +464,11 @@ mod tests {
 
     // Case 3: Bottom left
     /*
-    * . .
-    * . .
-    R * *
+      * . .
+      * . .
+      R * *
 
-    14 valid moves
+      14 valid moves
     */
 
     moves = board.get_moves(coord!(7, 0));
@@ -462,11 +476,11 @@ mod tests {
 
     // Case 4: Bottom right
     /*
-    . . *
-    . . *
-    * * R
+      . . *
+      . . *
+      * * R
 
-    14 valid moves
+      14 valid moves
     */
 
     moves = board.get_moves(coord!(7, 7));
@@ -474,12 +488,12 @@ mod tests {
 
     // Case 5: Middle
     /*
-    . * . .
-    * R * *
-    . * . .
-    . * . .
+      . * . .
+      * R * *
+      . * . .
+      . * . .
 
-    14 valid moves
+      14 valid moves
     */
 
     moves = board.get_moves(coord!(3, 3));
@@ -487,12 +501,12 @@ mod tests {
 
     // Case 6: Friendly piece on the way
     /*
-    . * . .
-    * R * *
-    . P . .
-    . . . .
+      . * . .
+      * R * *
+      . P . .
+      . . . .
 
-    12 valid moves
+      12 valid moves
     */
 
     board.place_piece(piece!(Pawn, White), coord!(6, 6));
@@ -501,12 +515,12 @@ mod tests {
 
     // Case 7: Enemy piece on the way
     /*
-    . * . .
-    * R * *
-    . p . .
-    . . . .
+      . * . .
+      * R * *
+      . p . .
+      . . . .
 
-    13 valid moves
+      13 valid moves
     */
 
     board.place_piece(piece!(Pawn, Black), coord!(6, 6));
@@ -522,13 +536,13 @@ mod tests {
 
     // Case 1: Top left
     /*
-    K . . . .
-    . . * . .
-    . * . . .
-    . . . . .
-    . . . . .
+      K . . . .
+      . . * . .
+      . * . . .
+      . . . . .
+      . . . . .
 
-    2 valid moves
+      2 valid moves
     */
 
     board.place_piece(knight, coord!(0, 0));
@@ -538,13 +552,13 @@ mod tests {
 
     // Case 2: Top right
     /*
-    . . . . K
-    . . * . .
-    . . . * .
-    . . . . .
-    . . . . .
+      . . . . K
+      . . * . .
+      . . . * .
+      . . . . .
+      . . . . .
 
-    2 valid moves
+      2 valid moves
     */
 
     board.place_piece(knight, coord!(0, 7));
@@ -554,13 +568,13 @@ mod tests {
 
     // Case 3: Bottom left
     /*
-    . . . . .
-    . . . . .
-    . * . . .
-    . . * . .
-    K . . . .
+      . . . . .
+      . . . . .
+      . * . . .
+      . . * . .
+      K . . . .
 
-    2 valid moves
+      2 valid moves
     */
 
     board.place_piece(knight, coord!(7, 0));
@@ -570,13 +584,13 @@ mod tests {
 
     // Case 4: Bottom left
     /*
-    . . . . .
-    . . . . .
-    . . . * .
-    . . * . .
-    . . . . K
+      . . . . .
+      . . . . .
+      . . . * .
+      . . * . .
+      . . . . K
 
-    2 valid moves
+      2 valid moves
     */
 
     board.place_piece(knight, coord!(7, 7));
@@ -586,13 +600,13 @@ mod tests {
 
     // Case 5: Middle
     /*
-    . * . * .
-    * . . . *
-    . . K . .
-    * . . . *
-    . * . * .
+      . * . * .
+      * . . . *
+      . . K . .
+      * . . . *
+      . * . * .
 
-    8 valid moves
+      8 valid moves
     */
 
     board.place_piece(knight, coord!(2, 2));
@@ -602,13 +616,13 @@ mod tests {
 
     // Case 6: 1 friendly piece on a way
     /*
-    . * . * .
-    * . . . *
-    . . K . .
-    * . . . *
-    . P . * .
+      . * . * .
+      * . . . *
+      . . K . .
+      * . . . *
+      . P . * .
 
-    7 valid moves
+      7 valid moves
     */
 
     board.place_piece(knight, coord!(2, 2));
@@ -619,13 +633,13 @@ mod tests {
 
     // Case 7: 2 friendly pieces on a way
     /*
-    . * . * .
-    * . . . *
-    . . K . .
-    * . . . P
-    . P . * .
+      . * . * .
+      * . . . *
+      . . K . .
+      * . . . P
+      . P . * .
 
-    6 valid moves
+      6 valid moves
     */
 
     board.place_piece(knight, coord!(2, 2));
@@ -637,13 +651,13 @@ mod tests {
 
     // Case 8: Enemy piece on the way
     /*
-    . * . * .
-    * . . . *
-    . . K . .
-    * . . . *
-    . * . p .
+      . * . * .
+      * . . . *
+      . . K . .
+      * . . . *
+      . * . p .
 
-    8 valid moves
+      8 valid moves
     */
 
     board.place_piece(knight, coord!(2, 2));
@@ -661,11 +675,11 @@ mod tests {
 
     // Case 1: Pawn in the middle
     /*
-    . . . . .
-    . . * . .
-    . . P . .
+      . . . . .
+      . . * . .
+      . . P . .
 
-    1 valid move
+      1 valid move
     */
 
     board.place_piece(pawn, coord!(4, 3));
@@ -675,11 +689,11 @@ mod tests {
 
     // Case 2: Pawn in the middle with a friendly piece on the way
     /*
-    . . . . .
-    . . K . .
-    . . P . .
+      . . . . .
+      . . K . .
+      . . P . .
 
-    0 valid moves
+      0 valid moves
     */
 
     board.place_piece(pawn, coord!(4, 3));
@@ -690,11 +704,11 @@ mod tests {
 
     // Case 3: Pawn in the middle with an enemy piece on the way
     /*
-    . . . . .
-    . . p . .
-    . . P . .
+      . . . . .
+      . . p . .
+      . . P . .
 
-    0 valid moves
+      0 valid moves
     */
 
     board.place_piece(pawn, coord!(4, 3));
@@ -705,11 +719,11 @@ mod tests {
 
     // Case 4: Pawn in the middle with a enemy piece that can be captured
     /*
-    . . . . .
-    . . * p .
-    . . P . .
+      . . . . .
+      . . * p .
+      . . P . .
 
-    2 valid move
+      2 valid move
     */
 
     board.place_piece(pawn, coord!(4, 3));
@@ -720,12 +734,12 @@ mod tests {
 
     // Case 5: Pawn in the middle with 2 enemy pieces that can be captured
     /*
-    . . . . .
-    . p * p .
-    . . P . .
-    . . . . .
+      . . . . .
+      . p * p .
+      . . P . .
+      . . . . .
 
-    3 valid moves
+      3 valid moves
     */
 
     board.place_piece(pawn, coord!(4, 3));
@@ -763,13 +777,13 @@ mod tests {
 
     // Case 9: Pawn in the middle with a Pawn that made a 2 step move, en passant possible
     /*
-    . . . . .
-    . . * * .
-    . . P p .
-    . . . . .
-    . . . . .
+      . . . . .
+      . . * * .
+      . . P p .
+      . . . . .
+      . . . . .
 
-    2 valid moves
+      2 valid moves
     */
 
     board.place_piece(pawn, coord!(3, 3));
@@ -781,16 +795,16 @@ mod tests {
 
     // Case 10: Advanced en passant
     /*
-    . . . . .
-    . p K * .
-    . . P p .
-    . . . . .
-    . . . . .
+      . . . . .
+      . p K * .
+      . . P p .
+      . . . . .
+      . . . . .
 
-    2 valid moves
+      2 valid moves
     */
 
-    board.load_fen(String::from("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1"));
+    board.load_fen(String::from("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1")).expect("Failed to load FEN");
     assert_eq!(moves.len(), 2);
     board.reset();
   }
@@ -807,7 +821,7 @@ mod tests {
        For pawn it is 0 valid moves
     */
 
-    board.load_fen(String::from("8/8/8/8/1KP3r1/8/8/8 w - - 0 1"));
+    board.load_fen(String::from("8/8/8/8/1KP3r1/8/8/8 w - - 0 1")).expect("Failed to load FEN");
     assert_eq!(board.get_moves(coord!(4, 2)).len(), 0);
 
     // Case 2
@@ -819,7 +833,7 @@ mod tests {
       For rook it is 1 valid move
     */
 
-    board.load_fen(String::from("8/8/8/8/1KRr4/8/8/8 w - - 0 1"));
+    board.load_fen(String::from("8/8/8/8/1KRr4/8/8/8 w - - 0 1")).expect("Failed to load FEN");
     assert_eq!(board.get_moves(coord!(4, 2)).len(), 1);
   }
 
@@ -838,19 +852,18 @@ mod tests {
     */
 
     println!("Double rook mate");
-    board.load_fen(String::from("K6r/7r/8/8/8/8/8/8 w - - 0 1"));
+    board.load_fen(String::from("K6r/7r/8/8/8/8/8/8 w - - 0 1")).expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::White), true);
     board.reset();
 
     // Case 2: Anderssen's mate
     /*
-     * . k R
-     * . P .
-     * K . .
+       . k R
+       . P .
+       K . .
      */
 
     println!("Anderssen's mate");
-    // board.load_fen(String::from("6kR/6P1/5K2/8/8/8/8/8 w - - 0 1"));
     board.place_piece(piece!(King, Black), coord!(0, 6));
     board.place_piece(piece!(Rook, White), coord!(0, 7));
     board.place_piece(piece!(Pawn, White), coord!(1, 6));
@@ -861,12 +874,12 @@ mod tests {
     // Case 3: Arabian mate
 
     println!("Arabian mate");
-    board.load_fen(String::from("7k/7R/5N2/8/8/8/8/8 w - - 0 1"));
+    board.load_fen(String::from("7k/7R/5N2/8/8/8/8/8 w - - 0 1")).expect("Failed to load FEN");
     board.reset();
 
     // Case N: Not a mate
     println!("Not a mate");
-    board.load_fen(String::from("K6r/7r/6N1/8/8/8/8/8 w - - 0 1"));
+    board.load_fen(String::from("K6r/7r/6N1/8/8/8/8/8 w - - 0 1")).expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::White), false);
   }
 
