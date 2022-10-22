@@ -1,1 +1,0 @@
-time ./target/debug/chess
