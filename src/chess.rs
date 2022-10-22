@@ -108,8 +108,7 @@ impl Coordinate {
   }
 }
 
-#[derive(Hash, Clone, Copy, PartialEq, Eq)]
-#[derive(Debug)]
+#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Pieces {
   King,
   Queen,
@@ -119,15 +118,13 @@ pub enum Pieces {
   Pawn,
 }
 
-#[derive(Hash, Clone, Copy, PartialEq, Eq)]
-#[derive(Debug)]
+#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Color {
   Black,
   White,
 }
 
-#[derive(Hash, Clone, Copy)]
-#[derive(Debug)]
+#[derive(Hash, Clone, Copy, Debug)]
 pub struct Piece {
   pub breed: Pieces,
   pub color: Color,
@@ -432,7 +429,7 @@ impl Board {
     max_depth: u8,
     coord: Coordinate,
     coord_delta: u8, // TODO: Write explanation
-    dynamic: bool, // TODO: Write explanation
+    dynamic: bool,   // TODO: Write explanation
   ) -> Vec<Coordinate> {
     /*
      * -9 -8 -7
@@ -478,14 +475,11 @@ impl Board {
           },
         }
 
-        let check_coord_delta = if dynamic {
-          depth
-        } else {
-          coord_delta
-        };
+        let check_coord_delta = if dynamic { depth } else { coord_delta };
 
-        if (new_coord.row as i8 - coord.row as i8).abs() != check_coord_delta as i8 ||
-           (new_coord.col as i8 - coord.col as i8).abs() != check_coord_delta as i8 {
+        if (new_coord.row as i8 - coord.row as i8).abs() != check_coord_delta as i8
+          || (new_coord.col as i8 - coord.col as i8).abs() != check_coord_delta as i8
+        {
           deltas.remove(i);
           continue;
         }
@@ -537,19 +531,49 @@ impl Board {
         use Pieces::*;
         match piece.breed {
           King => {
-            moves.append(&mut self.get_moves_in_direction(all_moves_deltas, 1, coordinate, 0, true));
+            moves.append(&mut self.get_moves_in_direction(
+              all_moves_deltas,
+              1,
+              coordinate,
+              0,
+              true,
+            ));
           },
           Queen => {
-            moves.append(&mut self.get_moves_in_direction(all_moves_deltas, 8, coordinate, 0, true));
+            moves.append(&mut self.get_moves_in_direction(
+              all_moves_deltas,
+              8,
+              coordinate,
+              0,
+              true,
+            ));
           },
           Rook => {
-            moves.append(&mut self.get_moves_in_direction(linear_moves_deltas, 8, coordinate, 0, true));
+            moves.append(&mut self.get_moves_in_direction(
+              linear_moves_deltas,
+              8,
+              coordinate,
+              0,
+              true,
+            ));
           },
           Bishop => {
-            moves.append(&mut self.get_moves_in_direction(diagonal_moves_deltas, 8, coordinate, 0, true));
+            moves.append(&mut self.get_moves_in_direction(
+              diagonal_moves_deltas,
+              8,
+              coordinate,
+              0,
+              true,
+            ));
           },
           Knight => {
-            moves.append(&mut self.get_moves_in_direction(vec![-17, -15, -10, -6, 6, 10, 15, 17], 1, coordinate, 3, false));
+            moves.append(&mut self.get_moves_in_direction(
+              vec![-17, -15, -10, -6, 6, 10, 15, 17],
+              1,
+              coordinate,
+              3,
+              false,
+            ));
           },
           Pawn => {
             let mut deltas: Vec<i8> = Vec::new();
@@ -576,7 +600,10 @@ impl Board {
     };
   }
 
-  pub fn get_king_coord(&self, color: Color) -> Option<Coordinate> {
+  pub fn get_king_coord(
+    &self,
+    color: Color,
+  ) -> Option<Coordinate> {
     for (coord, piece) in &self.pieces {
       if piece.breed == Pieces::King && piece.color == color {
         return Some(coord.clone());
@@ -587,14 +614,20 @@ impl Board {
   }
 
   #[allow(unused)]
-  pub fn is_in_check(&self, color: Color) -> bool {
-      // NOT IMPLEMENTED
-      return false;
+  pub fn is_in_check(
+    &self,
+    color: Color,
+  ) -> bool {
+    // NOT IMPLEMENTED
+    return false;
   }
 
   #[allow(unused)]
-  pub fn is_in_checkmate(&self, color: Color) -> bool {
-      // NOT IMPLEMENTED
-      return false;
+  pub fn is_in_checkmate(
+    &self,
+    color: Color,
+  ) -> bool {
+    // NOT IMPLEMENTED
+    return false;
   }
 }

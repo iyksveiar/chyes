@@ -190,7 +190,9 @@ mod tests {
     board.reset();
 
     // Case 11
-    board.load_fen(String::from("4r3/8/8/4K2r/8/8/8/8 w - - 0 1")).expect("Failed to load FEN");
+    board
+      .load_fen(String::from("4r3/8/8/4K2r/8/8/8/8 w - - 0 1"))
+      .expect("Failed to load FEN");
     assert_eq!(board.is_in_check(Color::White), true);
     board.reset();
   }
@@ -305,7 +307,9 @@ mod tests {
       0 valid moves
     */
 
-    board.load_fen(String::from("2r1r3/8/7r/3K4/7r/8/8/8 w - - 0 1")).expect("Failed to load FEN");
+    board
+      .load_fen(String::from("2r1r3/8/7r/3K4/7r/8/8/8 w - - 0 1"))
+      .expect("Failed to load FEN");
     moves = board.get_moves(coord!(3, 3));
     assert_eq!(moves.len(), 0);
     board.reset();
@@ -403,12 +407,12 @@ mod tests {
 
     // Case 6: Friendly piece on the way
     /*
-       * . *
-       . B .
-       * . P
+      * . *
+      . B .
+      * . P
 
-       3 valid moves
-     */
+      3 valid moves
+    */
 
     board.reset();
     board.place_piece(piece!(Pawn, White), coord!(2, 2));
@@ -804,7 +808,9 @@ mod tests {
       2 valid moves
     */
 
-    board.load_fen(String::from("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1")).expect("Failed to load FEN");
+    board
+      .load_fen(String::from("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1"))
+      .expect("Failed to load FEN");
     assert_eq!(moves.len(), 2);
     board.reset();
   }
@@ -821,7 +827,9 @@ mod tests {
        For pawn it is 0 valid moves
     */
 
-    board.load_fen(String::from("8/8/8/8/1KP3r1/8/8/8 w - - 0 1")).expect("Failed to load FEN");
+    board
+      .load_fen(String::from("8/8/8/8/1KP3r1/8/8/8 w - - 0 1"))
+      .expect("Failed to load FEN");
     assert_eq!(board.get_moves(coord!(4, 2)).len(), 0);
 
     // Case 2
@@ -833,7 +841,9 @@ mod tests {
       For rook it is 1 valid move
     */
 
-    board.load_fen(String::from("8/8/8/8/1KRr4/8/8/8 w - - 0 1")).expect("Failed to load FEN");
+    board
+      .load_fen(String::from("8/8/8/8/1KRr4/8/8/8 w - - 0 1"))
+      .expect("Failed to load FEN");
     assert_eq!(board.get_moves(coord!(4, 2)).len(), 1);
   }
 
@@ -852,16 +862,18 @@ mod tests {
     */
 
     println!("Double rook mate");
-    board.load_fen(String::from("K6r/7r/8/8/8/8/8/8 w - - 0 1")).expect("Failed to load FEN");
+    board
+      .load_fen(String::from("K6r/7r/8/8/8/8/8/8 w - - 0 1"))
+      .expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::White), true);
     board.reset();
 
     // Case 2: Anderssen's mate
     /*
-       . k R
-       . P .
-       K . .
-     */
+      . k R
+      . P .
+      K . .
+    */
 
     println!("Anderssen's mate");
     board.place_piece(piece!(King, Black), coord!(0, 6));
@@ -874,12 +886,16 @@ mod tests {
     // Case 3: Arabian mate
 
     println!("Arabian mate");
-    board.load_fen(String::from("7k/7R/5N2/8/8/8/8/8 w - - 0 1")).expect("Failed to load FEN");
+    board
+      .load_fen(String::from("7k/7R/5N2/8/8/8/8/8 w - - 0 1"))
+      .expect("Failed to load FEN");
     board.reset();
 
     // Case N: Not a mate
     println!("Not a mate");
-    board.load_fen(String::from("K6r/7r/6N1/8/8/8/8/8 w - - 0 1")).expect("Failed to load FEN");
+    board
+      .load_fen(String::from("K6r/7r/6N1/8/8/8/8/8 w - - 0 1"))
+      .expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::White), false);
   }
 
