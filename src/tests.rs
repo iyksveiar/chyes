@@ -3,7 +3,9 @@ use crate::chess::*;
 // Macro to expand coord!(x, y) to Coordinate { row: x, col: y }
 macro_rules! coord {
   ($x:expr, $y:expr) => {
-    Coordinate { row: $x, col: $y }
+    Coordinate {
+      row: $x, col: $y
+    }
   };
 }
 
@@ -12,7 +14,7 @@ macro_rules! piece {
   ($piece:ident, $color:ident) => {
     Piece {
       breed: Pieces::$piece,
-      color: Color::$color,
+      color: Color::$color
     }
   };
 }

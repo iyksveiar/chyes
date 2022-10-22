@@ -8,7 +8,9 @@ const WHITE_PIECES: [&str; 6] = ["♚", "♛", "♜", "♝", "♞", "♟"];
 // Macro to expand coord!(x, y) to Coordinate { row: x, col: y }
 macro_rules! coord {
   ($x:expr, $y:expr) => {
-    Coordinate { row: $x, col: $y }
+    Coordinate {
+      row: $x, col: $y
+    }
   };
 }
 
@@ -17,7 +19,7 @@ macro_rules! piece {
   ($piece:ident, $color:ident) => {
     Piece {
       breed: Pieces::$piece,
-      color: Color::$color,
+      color: Color::$color
     }
   };
 }
@@ -26,7 +28,7 @@ macro_rules! piece {
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Coordinate {
   pub row: u8,
-  pub col: u8,
+  pub col: u8
 }
 
 impl Coordinate {
@@ -47,7 +49,7 @@ impl Coordinate {
     // Add the row
     notation.push((56 - self.row) as char);
 
-    return notation;
+    return notation
   }
 
   pub fn from_notation(notation: String) -> Result<Self, ()> {
@@ -56,7 +58,7 @@ impl Coordinate {
 
     // Check if the notation is valid
     if notation.len() != 2 {
-      return Err(());
+      return Err(())
     }
 
     // Get the column
@@ -67,10 +69,10 @@ impl Coordinate {
 
     // Check if the column and row are valid
     if col > 7 || row > 7 {
-      return Err(());
+      return Err(())
     }
 
-    return Ok(coord!(row, col));
+    return Ok(coord!(row, col))
   }
 
   pub fn as_number(&self) -> u8 {
@@ -86,25 +88,25 @@ impl Coordinate {
      * 56 57 58 59 60 61 62 63
      */
 
-    return self.row * 8 + self.col;
+    return self.row * 8 + self.col
   }
 
   pub fn from_number(number: u8) -> Result<Self, ()> {
     // Converts a number to a coordinate
     if number > 63 {
-      return Err(());
+      return Err(())
     }
 
-    return Ok(coord!(number / 8, number % 8));
+    return Ok(coord!(number / 8, number % 8))
   }
 
   pub fn is_valid(&self) -> Result<(), ()> {
     // Check if the coordinate is valid
     if self.row > 7 || self.col > 7 {
-      return Err(());
+      return Err(())
     }
 
-    return Ok(());
+    return Ok(())
   }
 }
 
@@ -115,29 +117,29 @@ pub enum Pieces {
   Rook,
   Bishop,
   Knight,
-  Pawn,
+  Pawn
 }
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Color {
   Black,
-  White,
+  White
 }
 
 #[derive(Hash, Clone, Copy, Debug)]
 pub struct Piece {
   pub breed: Pieces,
-  pub color: Color,
+  pub color: Color
 }
 
 #[derive(Clone)]
 pub struct Board {
-  pub turn: Color,
-  pub pieces: HashMap<Coordinate, Piece>,
+  pub turn:                 Color,
+  pub pieces:               HashMap<Coordinate, Piece>,
   pub en_passant_target_sq: Option<Coordinate>,
-  pub castling: [bool; 4], // [Black King, Black Queen, White King, White Queen]
-  pub halfmove_clock: u16,
-  pub fullmove_number: u16,
+  pub castling:             [bool; 4], // [Black King, Black Queen, White King, White Queen]
+  pub halfmove_clock:       u16,
+  pub fullmove_number:      u16
 }
 
 #[allow(dead_code)]
@@ -146,20 +148,20 @@ impl Board {
     let mut result = Board::new();
     result
       .load_fen(String::from(
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
       ))
       .expect("Could not load FEN");
-    return result;
+    return result
   }
 
   pub fn new() -> Self {
     Board {
-      turn: Color::White,
-      pieces: HashMap::new(),
+      turn:                 Color::White,
+      pieces:               HashMap::new(),
       en_passant_target_sq: None,
-      castling: [true, true, true, true],
-      halfmove_clock: 0,
-      fullmove_number: 1,
+      castling:             [true, true, true, true],
+      halfmove_clock:       0,
+      fullmove_number:      1
     }
   }
 
@@ -174,7 +176,7 @@ impl Board {
 
   pub fn load_fen(
     &mut self,
-    fen: String,
+    fen: String
   ) -> Result<(), ()> {
     // Source: https://en.wikipedia.org/wiki/forsyth%e2%80%93edwards_notation
 
@@ -203,7 +205,7 @@ impl Board {
       } else {
         let color = match c.is_uppercase() {
           true => Color::White,
-          false => Color::Black,
+          false => Color::Black
         };
 
         let piece = match c.to_ascii_lowercase() {
@@ -213,15 +215,15 @@ impl Board {
           'b' => Pieces::Bishop,
           'n' => Pieces::Knight,
           'p' => Pieces::Pawn,
-          _ => return Err(()),
+          _ => return Err(())
         };
 
         self.pieces.insert(
           coord!(row, col),
           Piece {
             breed: piece,
-            color,
-          },
+            color
+          }
         );
         col += 1;
       }
@@ -231,7 +233,7 @@ impl Board {
     self.turn = match active_color {
       "w" => Color::White,
       "b" => Color::Black,
-      _ => return Err(()),
+      _ => return Err(())
     };
 
     // Castling availability
@@ -242,14 +244,14 @@ impl Board {
         'k' => self.castling[0] = true,
         'q' => self.castling[1] = true,
         '-' => (),
-        _ => return Err(()),
+        _ => return Err(())
       }
     }
 
     // En passant target square
     if en_passant_target_square != "-" {
       self.en_passant_target_sq = Some(Coordinate::from_notation(
-        en_passant_target_square.to_string(),
+        en_passant_target_square.to_string()
       )?);
     }
 
@@ -259,7 +261,7 @@ impl Board {
     // Fullmove number
     self.fullmove_number = fullmove_number.parse().map_err(|_| ())?;
 
-    return Ok(());
+    return Ok(())
   }
 
   pub fn get_fen(&self) -> String {
@@ -288,12 +290,12 @@ impl Board {
             Pieces::Rook => 'R',
             Pieces::Bishop => 'B',
             Pieces::Knight => 'N',
-            Pieces::Pawn => 'P',
+            Pieces::Pawn => 'P'
           };
 
           fen.push(match piece.color {
             Color::White => c,
-            Color::Black => c.to_ascii_lowercase(),
+            Color::Black => c.to_ascii_lowercase()
           });
         } else {
           empty_squares += 1;
@@ -314,7 +316,7 @@ impl Board {
     // Active color
     fen.push(match self.turn {
       Color::White => 'w',
-      Color::Black => 'b',
+      Color::Black => 'b'
     });
 
     fen.push(' ');
@@ -345,7 +347,7 @@ impl Board {
     // En passant target square
     match self.en_passant_target_sq {
       Some(coord) => fen.push_str(&coord.to_notation()),
-      None => fen.push('-'),
+      None => fen.push('-')
     };
 
     fen.push(' ');
@@ -358,37 +360,37 @@ impl Board {
     // Fullmove number
     fen.push_str(&self.fullmove_number.to_string());
 
-    return fen;
+    return fen
   }
 
   pub fn place_piece(
     &mut self,
     piece: Piece,
-    coord: Coordinate,
+    coord: Coordinate
   ) -> Option<Piece> {
     // Checking if the coordinate is valid
     match coord.is_valid() {
       Ok(_) => (),
-      Err(()) => panic!("Invalid coordinate"),
+      Err(()) => panic!("Invalid coordinate")
     }
 
     let old_piece = self.get_piece(&coord);
 
     self.pieces.insert(coord, piece);
 
-    return old_piece;
+    return old_piece
   }
 
   pub fn get_piece(
     &self,
-    coordinate: &Coordinate,
+    coordinate: &Coordinate
   ) -> Option<Piece> {
     let result = self.pieces.get(coordinate);
 
     return match result {
       Some(piece_ptr) => Some(piece_ptr.clone()),
-      None => None,
-    };
+      None => None
+    }
   }
 
   pub fn draw(&self) {
@@ -400,7 +402,7 @@ impl Board {
           Some(piece) => {
             let pieces_str: &[&str; 6] = match piece.color {
               Color::White => &WHITE_PIECES,
-              Color::Black => &BLACK_PIECES,
+              Color::Black => &BLACK_PIECES
             };
 
             use Pieces::*;
@@ -412,11 +414,11 @@ impl Board {
                 Rook => pieces_str[2],
                 Bishop => pieces_str[3],
                 Knight => pieces_str[4],
-                Pawn => pieces_str[5],
+                Pawn => pieces_str[5]
               }
             );
           },
-          None => print!(". "),
+          None => print!(". ")
         }
       }
       println!();
@@ -429,7 +431,7 @@ impl Board {
     max_depth: u8,
     coord: Coordinate,
     coord_delta: u8, // TODO: Write explanation
-    dynamic: bool,   // TODO: Write explanation
+    dynamic: bool    // TODO: Write explanation
   ) -> Vec<Coordinate> {
     /*
      * -9 -8 -7
@@ -462,7 +464,7 @@ impl Board {
 
         if new_numeric < 0 || new_numeric > 63 {
           deltas.remove(i);
-          continue;
+          continue
         }
 
         let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
@@ -471,8 +473,8 @@ impl Board {
           Ok(_) => (),
           Err(()) => {
             deltas.remove(i);
-            continue;
-          },
+            continue
+          }
         }
 
         let check_coord_delta = if dynamic { depth } else { coord_delta };
@@ -481,7 +483,7 @@ impl Board {
           || (new_coord.col as i8 - coord.col as i8).abs() != check_coord_delta as i8
         {
           deltas.remove(i);
-          continue;
+          continue
         }
 
         let piece = self.get_piece(&new_coord);
@@ -495,19 +497,19 @@ impl Board {
               deltas.remove(i);
             }
           },
-          None => moves.push(new_coord),
+          None => moves.push(new_coord)
         }
 
         i += 1;
       }
     }
 
-    return moves;
+    return moves
   }
 
   pub fn get_moves(
     &self,
-    coordinate: Coordinate,
+    coordinate: Coordinate
   ) -> Vec<Coordinate> {
     return match self.get_piece(&coordinate) {
       Some(piece) => {
@@ -536,7 +538,7 @@ impl Board {
               1,
               coordinate,
               0,
-              true,
+              true
             ));
           },
           Queen => {
@@ -545,7 +547,7 @@ impl Board {
               8,
               coordinate,
               0,
-              true,
+              true
             ));
           },
           Rook => {
@@ -554,7 +556,7 @@ impl Board {
               8,
               coordinate,
               0,
-              true,
+              true
             ));
           },
           Bishop => {
@@ -563,7 +565,7 @@ impl Board {
               8,
               coordinate,
               0,
-              true,
+              true
             ));
           },
           Knight => {
@@ -572,7 +574,7 @@ impl Board {
               1,
               coordinate,
               3,
-              false,
+              false
             ));
           },
           Pawn => {
@@ -591,43 +593,43 @@ impl Board {
             }
 
             moves.append(&mut self.get_moves_in_direction(deltas, 1, coordinate, 0, true));
-          },
+          }
         }
 
         moves
       },
-      None => Vec::new(),
-    };
+      None => Vec::new()
+    }
   }
 
   pub fn get_king_coord(
     &self,
-    color: Color,
+    color: Color
   ) -> Option<Coordinate> {
     for (coord, piece) in &self.pieces {
       if piece.breed == Pieces::King && piece.color == color {
-        return Some(coord.clone());
+        return Some(coord.clone())
       }
     }
 
-    return None;
+    return None
   }
 
   #[allow(unused)]
   pub fn is_in_check(
     &self,
-    color: Color,
+    color: Color
   ) -> bool {
     // NOT IMPLEMENTED
-    return false;
+    return false
   }
 
   #[allow(unused)]
   pub fn is_in_checkmate(
     &self,
-    color: Color,
+    color: Color
   ) -> bool {
     // NOT IMPLEMENTED
-    return false;
+    return false
   }
 }
