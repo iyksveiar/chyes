@@ -431,6 +431,8 @@ impl Board {
     mut deltas: Vec<i8>,
     max_depth: u8,
     coord: Coordinate,
+    coord_delta: u8, // TODO: Write explanation
+    dynamic: bool, // TODO: Write explanation
   ) -> Vec<Coordinate> {
     /*
      * -9 -8 -7
@@ -476,8 +478,14 @@ impl Board {
           },
         }
 
-        if (new_coord.row as i8 - coord.row as i8).abs() != depth as i8 ||
-           (new_coord.col as i8 - coord.col as i8).abs() != depth as i8 {
+        let check_coord_delta = if dynamic {
+          depth
+        } else {
+          coord_delta
+        };
+
+        if (new_coord.row as i8 - coord.row as i8).abs() != check_coord_delta as i8 ||
+           (new_coord.col as i8 - coord.col as i8).abs() != check_coord_delta as i8 {
           deltas.remove(i);
           continue;
         }
@@ -515,22 +523,33 @@ impl Board {
 
         let mut moves: Vec<Coordinate> = Vec::new();
 
+        /*
+         * Loop trough depth
+         * Loop trough deltas, using while loop and index variable, so it is simple to remove elements
+         * Generate the new coordinate
+         * Validate the new coordinate, not in numerical form, so that we can check if the piece is on the board
+         * Check what piece is standing on the new coordinate
+         * If there is no piece, add the move
+         * If there is a friendly piece, remove the delta from the deltas vector
+         * If there is an enemy piece, add the move and remove the delta from the deltas vector
+         */
+
         use Pieces::*;
         match piece.breed {
           King => {
-            moves.append(&mut self.get_moves_in_direction(all_moves_deltas, 1, coordinate));
+            moves.append(&mut self.get_moves_in_direction(all_moves_deltas, 1, coordinate, 0, true));
           },
           Queen => {
-            moves.append(&mut self.get_moves_in_direction(all_moves_deltas, 8, coordinate));
+            moves.append(&mut self.get_moves_in_direction(all_moves_deltas, 8, coordinate, 0, true));
           },
           Rook => {
-            moves.append(&mut self.get_moves_in_direction(linear_moves_deltas, 8, coordinate));
+            moves.append(&mut self.get_moves_in_direction(linear_moves_deltas, 8, coordinate, 0, true));
           },
           Bishop => {
-            moves.append(&mut self.get_moves_in_direction(diagonal_moves_deltas, 8, coordinate));
+            moves.append(&mut self.get_moves_in_direction(diagonal_moves_deltas, 8, coordinate, 0, true));
           },
           Knight => {
-            moves.append(&mut self.get_moves_in_direction(vec![-17, -15, -10, -6, 6, 10, 15, 17], 1, coordinate));
+            moves.append(&mut self.get_moves_in_direction(vec![-17, -15, -10, -6, 6, 10, 15, 17], 1, coordinate, 3, false));
           },
           Pawn => {
             let mut deltas: Vec<i8> = Vec::new();
@@ -547,7 +566,7 @@ impl Board {
               }
             }
 
-            moves.append(&mut self.get_moves_in_direction(deltas, 1, coordinate));
+            moves.append(&mut self.get_moves_in_direction(deltas, 1, coordinate, 0, true));
           },
         }
 
@@ -567,11 +586,13 @@ impl Board {
     return None;
   }
 
+  #[allow(unused)]
   pub fn is_in_check(&self, color: Color) -> bool {
       // NOT IMPLEMENTED
       return false;
   }
 
+  #[allow(unused)]
   pub fn is_in_checkmate(&self, color: Color) -> bool {
       // NOT IMPLEMENTED
       return false;
