@@ -24,121 +24,135 @@ mod tests {
   use super::*;
 
   #[test]
+  #[ignore]
   fn is_in_check() {
     let mut board: Board = Board::new();
-    let king = piece!(King, White);
 
     // Case 1: King in the middle
     /*
-      . . . . .
-      . . . . .
-      . . K . .
-      . . . . .
-      . . . . .
+      . . . . . . .
+      . . . . . . .
+      . . . . . . .
+      . . . K . . .
+      . . . . . . .
+      . . . . . . .
+      . . . . . . .
 
       false
     */
 
-    board.place_piece(king, coord!(3, 3));
+    board.place_piece(piece!(King, White), coord!(3, 3));
     assert_eq!(board.is_in_check(Color::White), false);
     board.reset();
 
     // Case 2
     /*
-      q . . . .
-      . . . . .
-      . . K . .
-      . . . . .
-      . . . . .
+      q . . . . . .
+      . . . . . . .
+      . . . . . . .
+      . . . K . . .
+      . . . . . . .
+      . . . . . . .
+      . . . . . . .
 
       true
     */
 
     board.place_piece(piece!(Queen, Black), coord!(0, 0));
-    board.place_piece(king, coord!(3, 3));
+    board.place_piece(piece!(King, White), coord!(3, 3));
     assert_eq!(board.is_in_check(Color::White), true);
     board.reset();
 
     // Case 3
     /*
-      Q . . . .
-      . . . . .
-      . . K . .
-      . . . . .
-      . . . . .
+      Q . . . . . .
+      . . . . . . .
+      . . . . . . .
+      . . . K . . .
+      . . . . . . .
+      . . . . . . .
+      . . . . . . .
 
       false
     */
 
     board.place_piece(piece!(Queen, White), coord!(0, 0));
-    board.place_piece(king, coord!(3, 3));
+    board.place_piece(piece!(King, White), coord!(3, 3));
     assert_eq!(board.is_in_check(Color::White), false);
     board.reset();
 
     // Case 4
     /*
-      . . r . .
-      . . . . .
-      . . K . .
-      . . . . .
-      . . . . .
+      . . . r . . .
+      . . . . . . .
+      . . . . . . .
+      . . . K . . .
+      . . . . . . .
+      . . . . . . .
+      . . . . . . .
 
       true
     */
 
-    board.place_piece(king, coord!(3, 3));
+    board.place_piece(piece!(King, White), coord!(3, 3));
     board.place_piece(piece!(Rook, Black), coord!(0, 3));
     assert_eq!(board.is_in_check(Color::White), true);
     board.reset();
 
     // Case 5
     /*
-      . . . . .
-      . . . . .
-      . . K . .
-      . . . . .
-      . . . k .
+      . . . . . . .
+      . . . . . . .
+      . . . . . . .
+      . . . K . . .
+      . . . . . . .
+      . . . . k . .
+      . . . . . . .
 
       true
     */
 
-    board.place_piece(king, coord!(3, 3));
+    board.place_piece(piece!(King, White), coord!(3, 3));
     board.place_piece(piece!(Knight, Black), coord!(5, 4));
     assert_eq!(board.is_in_check(Color::White), true);
     board.reset();
 
     // Case 6
     /*
-      . . . . .
-      . . . p .
-      . . K . .
-      . . . . .
-      . . . . .
+      . . . . . . .
+      . . . . . . .
+      . . . . p . .
+      . . . K . . .
+      . . . . . . .
+      . . . . . . .
+      . . . . . . .
 
       true
     */
 
-    board.place_piece(king, coord!(3, 3));
+    board.place_piece(piece!(King, White), coord!(3, 3));
     board.place_piece(piece!(Pawn, Black), coord!(2, 4));
     assert_eq!(board.is_in_check(Color::White), true);
     board.reset();
 
     // Case 7
     /*
-      . r . r .
-      . . . . r
-      . . K . .
-      . . . . r
-      . . . . .
+      . . r . r . .
+      . . . . . . .
+      . . . . . . r
+      . . . K . . .
+      . . . . . . r
+      . . . . . . .
+      . . . . . . .
 
       false
     */
 
-    board.place_piece(king, coord!(3, 3));
+    board.place_piece(piece!(King, White), coord!(3, 3));
     board.place_piece(piece!(Rook, Black), coord!(0, 2));
     board.place_piece(piece!(Rook, Black), coord!(0, 4));
-    board.place_piece(piece!(Rook, Black), coord!(2, 7));
-    board.place_piece(piece!(Rook, Black), coord!(4, 4));
+    board.place_piece(piece!(Rook, Black), coord!(2, 6));
+    board.place_piece(piece!(Rook, Black), coord!(4, 6));
     assert_eq!(board.is_in_check(Color::White), false);
     board.reset();
 
@@ -153,8 +167,8 @@ mod tests {
       true
     */
 
-    board.place_piece(king, coord!(3, 3));
-    board.place_piece(piece!(Bishop, Black), coord!(5, 5));
+    board.place_piece(piece!(King, White), coord!(2, 2));
+    board.place_piece(piece!(Bishop, Black), coord!(4, 4));
     assert_eq!(board.is_in_check(Color::White), true);
     board.reset();
 
@@ -169,9 +183,9 @@ mod tests {
       false
     */
 
-    board.place_piece(king, coord!(4, 3));
-    board.place_piece(piece!(Pawn, White), coord!(3, 4));
-    board.place_piece(piece!(Queen, Black), coord!(0, 7));
+    board.place_piece(piece!(King, White), coord!(3, 3));
+    board.place_piece(piece!(Pawn, White), coord!(2, 4));
+    board.place_piece(piece!(Queen, Black), coord!(1, 5));
     assert_eq!(board.is_in_check(Color::White), false);
     board.reset();
 
@@ -186,8 +200,8 @@ mod tests {
       true
     */
 
-    board.place_piece(king, coord!(3, 3));
-    board.place_piece(piece!(Rook, Black), coord!(3, 7));
+    board.place_piece(piece!(King, White), coord!(2, 2));
+    board.place_piece(piece!(Rook, Black), coord!(2, 4));
     assert_eq!(board.is_in_check(Color::White), true);
     board.reset();
 
@@ -210,24 +224,21 @@ mod tests {
   #[test]
   fn king_moves() {
     let mut board = Board::new();
-    let king = piece!(King, White);
-    let mut moves: Vec<Coordinate>;
 
     // Case 1: King in the top left
     /*
-      K *
+      K * .
       * * .
       . . .
 
       3 valid moves
     */
 
-    board.place_piece(king, coord!(0, 0));
-    moves = board.get_moves(coord!(0, 0));
-    assert_eq!(moves.len(), 3);
+    board.place_piece(piece!(King, White), coord!(0, 0));
+    assert_eq!(board.get_moves(coord!(0, 0)).len(), 3);
     board.reset();
 
-    // Second case: King in the top right
+    // Case 2: King in the top right
     /*
       . * K
       . * *
@@ -236,69 +247,78 @@ mod tests {
       3 valid moves
     */
 
-    board.place_piece(king, coord!(0, 7));
-    moves = board.get_moves(coord!(0, 7));
-    assert_eq!(moves.len(), 3);
+    board.place_piece(piece!(King, White), coord!(0, 7));
+    assert_eq!(board.get_moves(coord!(0, 7)).len(), 3);
     board.reset();
 
-    // Third case: King in the bottom left
-    // . . .
-    // * * .
-    // K * .
-    // 3 valid moves
+    // Case 3: King in the bottom left
+    /*
+      . . .
+      * * .
+      K * .
 
-    board.place_piece(king, coord!(7, 0));
-    moves = board.get_moves(coord!(7, 0));
-    assert_eq!(moves.len(), 3);
+      3 valid moves
+    */
+
+    board.place_piece(piece!(King, White), coord!(7, 0));
+    assert_eq!(board.get_moves(coord!(7, 0)).len(), 3);
     board.reset();
 
-    // Fourth case: King in the bottom right
-    // . . .
-    // . * *
-    // . * K
-    // 3 valid moves
+    // Case 4: King in the bottom right
+    /*
+      . . .
+      . * *
+      . * K
 
-    board.place_piece(king, coord!(7, 7));
-    moves = board.get_moves(coord!(7, 7));
-    assert_eq!(moves.len(), 3);
+      3 valid moves
+    */
+
+    board.place_piece(piece!(King, White), coord!(7, 7));
+    assert_eq!(board.get_moves(coord!(7, 7)).len(), 3);
     board.reset();
 
-    // Fifth case: King in the middle
-    // * * *
-    // * K *
-    // * * *
-    // 8 valid moves
+    // Case 5: King in the middle
+    /*
+      * * *
+      * K *
+      * * *
+      
+      8 valid moves
+    */
 
-    board.place_piece(king, coord!(4, 4));
-    moves = board.get_moves(coord!(4, 4));
-    assert_eq!(moves.len(), 8);
+    board.place_piece(piece!(King, White), coord!(4, 4));
+    assert_eq!(board.get_moves(coord!(4, 4)).len(), 8);
     board.reset();
 
-    // Sixth case: King in the middle, with a friendly piece in the way
-    // * * *
-    // * K Q
-    // * * *
-    // 7 valid moves
+    // Case 6: King in the middle with a friendly piece in the way
+    /*
+      * * *
+      * K Q
+      * * *
 
-    board.place_piece(king, coord!(4, 4));
-    board.place_piece(piece!(Queen, White), coord!(3, 4));
-    moves = board.get_moves(coord!(4, 4));
-    assert_eq!(moves.len(), 7);
+      7 valid moves
+    */
+
+    board.place_piece(piece!(King, White), coord!(4, 4));
+    board.place_piece(piece!(Queen, White), coord!(4, 5));
+    assert_eq!(board.get_moves(coord!(4, 4)).len(), 7);
     board.reset();
 
-    // Seventh case: King in the middle, with an enemy piece in the way
-    // * . .
-    // . K q
-    // * . .
-    // 3 valid moves
+    // Case 7: King in the middle with an enemy piece in the way
+    /*
+      * . .
+      . K q
+      * . .
 
-    board.place_piece(king, coord!(4, 4));
+      3 valid moves
+    */
+
+    board.place_piece(piece!(King, White), coord!(4, 4));
     board.place_piece(piece!(Queen, Black), coord!(4, 5));
-    moves = board.get_moves(coord!(4, 4));
-    assert_eq!(moves.len(), 3);
+    assert_eq!(board.get_moves(coord!(4, 4)).len(), 3);
     board.reset();
 
-    // Eighth case: Rooks and King, stale mate
+    // Case 8: Rooks and King, stale mate
     /*
       . r . r .
       . . . . r
@@ -312,11 +332,10 @@ mod tests {
     board
       .load_fen(String::from("2r1r3/8/7r/3K4/7r/8/8/8 w - - 0 1"))
       .expect("Failed to load FEN");
-    moves = board.get_moves(coord!(3, 3));
-    assert_eq!(moves.len(), 0);
+    assert_eq!(board.get_moves(coord!(3, 3)).len(), 0);
     board.reset();
 
-    // Ninth case: King in the middle, with an enemy piece blocKing Some space
+    // Case 9: King in the middle with an enemy piece blocking some way
     /*
       . . . .
       . r . .
@@ -326,17 +345,15 @@ mod tests {
       4 valid moves
     */
 
-    board.place_piece(king, coord!(4, 4));
+    board.place_piece(piece!(King, White), coord!(4, 4));
     board.place_piece(piece!(Rook, Black), coord!(3, 3));
-    moves = board.get_moves(coord!(4, 4));
-    assert_eq!(moves.len(), 4);
+    assert_eq!(board.get_moves(coord!(4, 4)).len(), 4);
     board.reset();
   }
 
   #[test]
   fn diagonal_moves() {
     let mut board = Board::new();
-    let mut moves: Vec<Coordinate>;
 
     // Case 1: Top left
     /*
@@ -348,8 +365,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Bishop, White), coord!(0, 0));
-    moves = board.get_moves(coord!(0, 0));
-    assert_eq!(moves.len(), 7);
+    assert_eq!(board.get_moves(coord!(0, 0)).len(), 7);
 
     // Case 2: Top right
     /*
@@ -362,8 +378,7 @@ mod tests {
 
     board.reset();
     board.place_piece(piece!(Bishop, White), coord!(0, 7));
-    moves = board.get_moves(coord!(0, 7));
-    assert_eq!(moves.len(), 7);
+    assert_eq!(board.get_moves(coord!(0, 7)).len(), 7);
 
     // Case 3: Bottom left
     /*
@@ -376,8 +391,7 @@ mod tests {
 
     board.reset();
     board.place_piece(piece!(Bishop, White), coord!(7, 0));
-    moves = board.get_moves(coord!(7, 0));
-    assert_eq!(moves.len(), 7);
+    assert_eq!(board.get_moves(coord!(7, 0)).len(), 7);
 
     // Case 4: Bottom right
     /*
@@ -390,8 +404,7 @@ mod tests {
 
     board.reset();
     board.place_piece(piece!(Bishop, White), coord!(7, 7));
-    moves = board.get_moves(coord!(7, 7));
-    assert_eq!(moves.len(), 7);
+    assert_eq!(board.get_moves(coord!(7, 7)).len(), 7);
 
     // Case 5: Middle
     /*
@@ -404,8 +417,7 @@ mod tests {
 
     board.reset();
     board.place_piece(piece!(Bishop, White), coord!(3, 3));
-    moves = board.get_moves(coord!(3, 3));
-    assert_eq!(moves.len(), 13);
+    assert_eq!(board.get_moves(coord!(3, 3)).len(), 13);
 
     // Case 6: Friendly piece on the way
     /*
@@ -419,8 +431,7 @@ mod tests {
     board.reset();
     board.place_piece(piece!(Pawn, White), coord!(2, 2));
     board.place_piece(piece!(Bishop, White), coord!(1, 1));
-    moves = board.get_moves(coord!(1, 1));
-    assert_eq!(moves.len(), 3);
+    assert_eq!(board.get_moves(coord!(1, 1)).len(), 3);
 
     // Case 7: Enemy piece on the way
     /*
@@ -435,14 +446,12 @@ mod tests {
     board.reset();
     board.place_piece(piece!(Pawn, Black), coord!(2, 2));
     board.place_piece(piece!(Bishop, White), coord!(1, 1));
-    moves = board.get_moves(coord!(1, 1));
-    assert_eq!(moves.len(), 4);
+    assert_eq!(board.get_moves(coord!(1, 1)).len(), 4);
   }
 
   #[test]
   fn linear_moves() {
     let mut board = Board::new();
-    let mut moves: Vec<Coordinate>;
 
     // Case 1: Top left
     /*
@@ -453,8 +462,9 @@ mod tests {
       14 valid moves
     */
 
-    moves = board.get_moves(coord!(0, 0));
-    assert_eq!(moves.len(), 14);
+    board.place_piece(piece!(Rook, White), coord!(0, 0));
+    assert_eq!(board.get_moves(coord!(0, 0)).len(), 14);
+    board.reset();
 
     // Case 2: Top right
     /*
@@ -465,8 +475,9 @@ mod tests {
       14 valid moves
     */
 
-    moves = board.get_moves(coord!(0, 7));
-    assert_eq!(moves.len(), 14);
+    board.place_piece(piece!(Rook, White), coord!(0, 7));
+    assert_eq!(board.get_moves(coord!(0, 7)).len(), 14);
+    board.reset();
 
     // Case 3: Bottom left
     /*
@@ -477,8 +488,9 @@ mod tests {
       14 valid moves
     */
 
-    moves = board.get_moves(coord!(7, 0));
-    assert_eq!(moves.len(), 14);
+    board.place_piece(piece!(Rook, White), coord!(7, 0));
+    assert_eq!(board.get_moves(coord!(7, 0)).len(), 14);
+    board.reset();
 
     // Case 4: Bottom right
     /*
@@ -489,8 +501,9 @@ mod tests {
       14 valid moves
     */
 
-    moves = board.get_moves(coord!(7, 7));
-    assert_eq!(moves.len(), 14);
+    board.place_piece(piece!(Rook, White), coord!(7, 7));
+    assert_eq!(board.get_moves(coord!(7, 7)).len(), 14);
+    board.reset();
 
     // Case 5: Middle
     /*
@@ -502,8 +515,9 @@ mod tests {
       14 valid moves
     */
 
-    moves = board.get_moves(coord!(3, 3));
-    assert_eq!(moves.len(), 14);
+    board.place_piece(piece!(Rook, White), coord!(3, 3));
+    assert_eq!(board.get_moves(coord!(3, 3)).len(), 14);
+    board.reset();
 
     // Case 6: Friendly piece on the way
     /*
@@ -515,9 +529,9 @@ mod tests {
       12 valid moves
     */
 
+    board.place_piece(piece!(Rook, White), coord!(6, 5));
     board.place_piece(piece!(Pawn, White), coord!(6, 6));
-    moves = board.get_moves(coord!(6, 5));
-    assert_eq!(moves.len(), 12);
+    assert_eq!(board.get_moves(coord!(6, 5)).len(), 12);
 
     // Case 7: Enemy piece on the way
     /*
@@ -529,16 +543,14 @@ mod tests {
       13 valid moves
     */
 
+    board.place_piece(piece!(Rook, White), coord!(6, 5));
     board.place_piece(piece!(Pawn, Black), coord!(6, 6));
-    moves = board.get_moves(coord!(6, 5));
-    assert_eq!(moves.len(), 13);
+    assert_eq!(board.get_moves(coord!(6, 5)).len(), 13);
   }
 
   #[test]
   fn knight_moves() {
     let mut board: Board = Board::new();
-    let knight = piece!(Knight, White);
-    let mut moves: Vec<Coordinate>;
 
     // Case 1: Top left
     /*
@@ -551,9 +563,8 @@ mod tests {
       2 valid moves
     */
 
-    board.place_piece(knight, coord!(0, 0));
-    moves = board.get_moves(coord!(0, 0));
-    assert_eq!(moves.len(), 2);
+    board.place_piece(piece!(Knight, White), coord!(0, 0));
+    assert_eq!(board.get_moves(coord!(0, 0)).len(), 2);
     board.reset();
 
     // Case 2: Top right
@@ -567,9 +578,8 @@ mod tests {
       2 valid moves
     */
 
-    board.place_piece(knight, coord!(0, 7));
-    moves = board.get_moves(coord!(0, 7));
-    assert_eq!(moves.len(), 2);
+    board.place_piece(piece!(Knight, White), coord!(0, 7));
+    assert_eq!(board.get_moves(coord!(0, 7)).len(), 2);
     board.reset();
 
     // Case 3: Bottom left
@@ -583,9 +593,8 @@ mod tests {
       2 valid moves
     */
 
-    board.place_piece(knight, coord!(7, 0));
-    moves = board.get_moves(coord!(7, 0));
-    assert_eq!(moves.len(), 2);
+    board.place_piece(piece!(Knight, White), coord!(7, 0));
+    assert_eq!(board.get_moves(coord!(7, 0)).len(), 2);
     board.reset();
 
     // Case 4: Bottom left
@@ -599,9 +608,8 @@ mod tests {
       2 valid moves
     */
 
-    board.place_piece(knight, coord!(7, 7));
-    moves = board.get_moves(coord!(7, 7));
-    assert_eq!(moves.len(), 2);
+    board.place_piece(piece!(Knight, White), coord!(7, 7));
+    assert_eq!(board.get_moves(coord!(7, 7)).len(), 2);
     board.reset();
 
     // Case 5: Middle
@@ -615,9 +623,8 @@ mod tests {
       8 valid moves
     */
 
-    board.place_piece(knight, coord!(2, 2));
-    moves = board.get_moves(coord!(2, 2));
-    assert_eq!(moves.len(), 8);
+    board.place_piece(piece!(Knight, White), coord!(2, 2));
+    assert_eq!(board.get_moves(coord!(2, 2)).len(), 8);
     board.reset();
 
     // Case 6: 1 friendly piece on a way
@@ -631,10 +638,9 @@ mod tests {
       7 valid moves
     */
 
-    board.place_piece(knight, coord!(2, 2));
+    board.place_piece(piece!(Knight, White), coord!(2, 2));
     board.place_piece(piece!(Pawn, White), coord!(4, 1));
-    moves = board.get_moves(coord!(2, 2));
-    assert_eq!(moves.len(), 7);
+    assert_eq!(board.get_moves(coord!(2, 2)).len(), 7);
     board.reset();
 
     // Case 7: 2 friendly pieces on a way
@@ -648,11 +654,10 @@ mod tests {
       6 valid moves
     */
 
-    board.place_piece(knight, coord!(2, 2));
+    board.place_piece(piece!(Knight, White), coord!(2, 2));
     board.place_piece(piece!(Pawn, White), coord!(4, 1));
     board.place_piece(piece!(Pawn, White), coord!(3, 4));
-    moves = board.get_moves(coord!(2, 2));
-    assert_eq!(moves.len(), 6);
+    assert_eq!(board.get_moves(coord!(2, 2)).len(), 6);
     board.reset();
 
     // Case 8: Enemy piece on the way
@@ -666,18 +671,15 @@ mod tests {
       8 valid moves
     */
 
-    board.place_piece(knight, coord!(2, 2));
+    board.place_piece(piece!(Knight, White), coord!(2, 2));
     board.place_piece(piece!(Pawn, Black), coord!(4, 3));
-    moves = board.get_moves(coord!(2, 2));
-    assert_eq!(moves.len(), 8);
+    assert_eq!(board.get_moves(coord!(2, 2)).len(), 8);
     board.reset();
   }
 
   #[test]
   fn pawn_moves() {
     let mut board: Board = Board::new();
-    let pawn = piece!(Pawn, White);
-    let mut moves: Vec<Coordinate>;
 
     // Case 1: Pawn in the middle
     /*
@@ -688,9 +690,8 @@ mod tests {
       1 valid move
     */
 
-    board.place_piece(pawn, coord!(4, 3));
-    moves = board.get_moves(coord!(4, 3));
-    assert_eq!(moves.len(), 1);
+    board.place_piece(piece!(Pawn, White), coord!(4, 3));
+    assert_eq!(board.get_moves(coord!(4, 3)).len(), 1);
     board.reset();
 
     // Case 2: Pawn in the middle with a friendly piece on the way
@@ -702,10 +703,9 @@ mod tests {
       0 valid moves
     */
 
-    board.place_piece(pawn, coord!(4, 3));
+    board.place_piece(piece!(Pawn, White), coord!(4, 3));
     board.place_piece(piece!(King, White), coord!(3, 3));
-    moves = board.get_moves(coord!(4, 3));
-    assert_eq!(moves.len(), 0);
+    assert_eq!(board.get_moves(coord!(4, 3)).len(), 0);
     board.reset();
 
     // Case 3: Pawn in the middle with an enemy piece on the way
@@ -717,10 +717,9 @@ mod tests {
       0 valid moves
     */
 
-    board.place_piece(pawn, coord!(4, 3));
+    board.place_piece(piece!(Pawn, White), coord!(4, 3));
     board.place_piece(piece!(Pawn, Black), coord!(3, 3));
-    moves = board.get_moves(coord!(4, 3));
-    assert_eq!(moves.len(), 0);
+    assert_eq!(board.get_moves(coord!(4, 3)).len(), 0);
     board.reset();
 
     // Case 4: Pawn in the middle with a enemy piece that can be captured
@@ -732,10 +731,9 @@ mod tests {
       2 valid move
     */
 
-    board.place_piece(pawn, coord!(4, 3));
+    board.place_piece(piece!(Pawn, White), coord!(4, 3));
     board.place_piece(piece!(Pawn, Black), coord!(3, 4));
-    moves = board.get_moves(coord!(4, 3));
-    assert_eq!(moves.len(), 2);
+    assert_eq!(board.get_moves(coord!(4, 3)).len(), 2);
     board.reset();
 
     // Case 5: Pawn in the middle with 2 enemy pieces that can be captured
@@ -748,37 +746,33 @@ mod tests {
       3 valid moves
     */
 
-    board.place_piece(pawn, coord!(4, 3));
+    board.place_piece(piece!(Pawn, White), coord!(4, 3));
     board.place_piece(piece!(Pawn, Black), coord!(3, 4));
     board.place_piece(piece!(Pawn, Black), coord!(3, 2));
-    moves = board.get_moves(coord!(4, 3));
-    assert_eq!(moves.len(), 3);
+    assert_eq!(board.get_moves(coord!(4, 3)).len(), 3);
     board.reset();
 
     // Case 6: Pawn in the starting row
     // 2 valid moves
 
-    board.place_piece(pawn, coord!(6, 1));
-    moves = board.get_moves(coord!(6, 1));
-    assert_eq!(moves.len(), 2);
+    board.place_piece(piece!(Pawn, White), coord!(6, 1));
+    assert_eq!(board.get_moves(coord!(6, 1)).len(), 2);
     board.reset();
 
     // Case 7: Pawn in the starting row with a friendly piece 2 steps away
     // 1 valid move
 
-    board.place_piece(pawn, coord!(6, 1));
+    board.place_piece(piece!(Pawn, White), coord!(6, 1));
     board.place_piece(piece!(Pawn, White), coord!(4, 1));
-    moves = board.get_moves(coord!(6, 1));
-    assert_eq!(moves.len(), 1);
+    assert_eq!(board.get_moves(coord!(6, 1)).len(), 1);
     board.reset();
 
     // Case 8: Pawn in the starting row with an enemy piece 2 steps away
     // 1 valid moves
 
-    board.place_piece(pawn, coord!(6, 1));
+    board.place_piece(piece!(Pawn, White), coord!(6, 1));
     board.place_piece(piece!(Pawn, Black), coord!(4, 1));
-    moves = board.get_moves(coord!(6, 1));
-    assert_eq!(moves.len(), 1);
+    assert_eq!(board.get_moves(coord!(6, 1)).len(), 1);
     board.reset();
 
     // Case 9: Pawn in the middle with a Pawn that made a 2 step move, en passant possible
@@ -792,11 +786,10 @@ mod tests {
       2 valid moves
     */
 
-    board.place_piece(pawn, coord!(3, 3));
+    board.place_piece(piece!(Pawn, White), coord!(3, 3));
     board.place_piece(piece!(Pawn, Black), coord!(3, 4));
     board.en_passant_target_sq = Some(coord!(2, 4));
-    moves = board.get_moves(coord!(3, 3));
-    assert_eq!(moves.len(), 2);
+    assert_eq!(board.get_moves(coord!(3, 3)).len(), 2);
     board.reset();
 
     // Case 10: Advanced en passant
@@ -813,20 +806,22 @@ mod tests {
     board
       .load_fen(String::from("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1"))
       .expect("Failed to load FEN");
-    assert_eq!(moves.len(), 2);
+    assert_eq!(board.get_moves(coord!(2, 3)).len(), 2);
     board.reset();
   }
 
   #[test]
+  #[ignore]
   fn moves_that_lead_to_check() {
     let mut board = Board::new();
+
     // Case 1
     /*
        . . .
        K P r
        . . .
 
-       For pawn it is 0 valid moves
+       For piece!(Pawn, White) it is 0 valid moves
     */
 
     board
@@ -851,6 +846,7 @@ mod tests {
 
   // NOTE: Not implemented filtering of moves that lead to check, no sense to run it =D
   #[test]
+  #[ignore]
   fn is_checkmate() {
     let mut board = Board::new();
 
@@ -904,22 +900,33 @@ mod tests {
   #[test]
   fn get_king_coord() {
     let mut board = Board::new();
-    let king = piece!(King, White);
 
-    macro_rules! test {
-      ($x: expr, $y: expr) => {
-        board.place_piece(king, coord!($x, $y));
-        assert_eq!(board.get_king_coord(Color::White), Some(coord!($x, $y)));
-        board.reset();
-      };
-    }
+    board.place_piece(piece!(King, White), coord!(1, 1));
+	assert_eq!(board.get_king_coord(Color::White), Some(coord!(1, 1)));
+	board.reset();
 
-    test!(1, 1);
-    test!(2, 7);
-    test!(3, 5);
-    test!(5, 2);
-    test!(5, 1);
-    test!(6, 6);
-    test!(6, 3);
+    board.place_piece(piece!(King, White), coord!(2, 7));
+	assert_eq!(board.get_king_coord(Color::White), Some(coord!(2, 7)));
+	board.reset();
+
+    board.place_piece(piece!(King, White), coord!(3, 5));
+	assert_eq!(board.get_king_coord(Color::White), Some(coord!(3, 5)));
+	board.reset();
+
+    board.place_piece(piece!(King, White), coord!(5, 2));
+	assert_eq!(board.get_king_coord(Color::White), Some(coord!(5, 2)));
+	board.reset();
+
+    board.place_piece(piece!(King, White), coord!(5, 1));
+	assert_eq!(board.get_king_coord(Color::White), Some(coord!(5, 1)));
+	board.reset();
+
+    board.place_piece(piece!(King, White), coord!(6, 6));
+	assert_eq!(board.get_king_coord(Color::White), Some(coord!(6, 6)));
+	board.reset();
+
+    board.place_piece(piece!(King, White), coord!(6, 3));
+	assert_eq!(board.get_king_coord(Color::White), Some(coord!(6, 3)));
+	board.reset();
   }
 }
