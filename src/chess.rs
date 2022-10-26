@@ -65,7 +65,7 @@ impl Coordinate {
     let col = notation.chars().nth(0).unwrap() as u8 - 97;
 
     // Get the row
-    let row = notation.chars().nth(1).unwrap() as u8 - 49;
+    let row = 56 - notation.chars().nth(1).unwrap() as u8;
 
     // Check if the column and row are valid
     if col > 7 || row > 7 {
@@ -425,174 +425,247 @@ impl Board {
     }
   }
 
-  fn get_moves_in_direction(
-    &self,
-    mut deltas: Vec<i8>,
-    max_depth: u8,
-    coord: Coordinate,
-    coord_delta: u8, // TODO: Write explanation
-    dynamic: bool    // TODO: Write explanation
-  ) -> Vec<Coordinate> {
-    /*
-     * -9 -8 -7
-     * -1  00 +1
-     * +7 +8 +9
-     */
-
-    let color = self.get_piece(&coord).expect("Couldn't get piece").color;
-
-    let mut moves = Vec::new();
-    let numeric: u8 = coord.as_number(); // Numeric representation of the coordinate
-
-    /*
-     * Loop trough depth
-     * Loop trough deltas, using while loop and index variable, so it is simple to remove elements
-     * Generate the new coordinate
-     * Validate the new coordinate, not in numerical form, so that we can check if the piece is on the board
-     * Check what piece is standing on the new coordinate
-     * If there is no piece, add the move
-     * If there is a friendly piece, remove the delta from the deltas vector
-     * If there is an enemy piece, add the move and remove the delta from the deltas vector
-     */
-
-    for depth in 1..=max_depth {
-      let mut i = 0;
-
-      while i < deltas.len() {
-        let delta = deltas[i];
-        let new_numeric = numeric as i8 + delta as i8 * depth as i8;
-
-        if new_numeric < 0 || new_numeric > 63 {
-          deltas.remove(i);
-          continue
-        }
-
-        let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
-
-        match new_coord.is_valid() {
-          Ok(_) => (),
-          Err(()) => {
-            deltas.remove(i);
-            continue
-          }
-        }
-
-        let check_coord_delta = if dynamic { depth } else { coord_delta };
-
-        if (new_coord.row as i8 - coord.row as i8).abs() != check_coord_delta as i8
-          || (new_coord.col as i8 - coord.col as i8).abs() != check_coord_delta as i8
-        {
-          deltas.remove(i);
-          continue
-        }
-
-        let piece = self.get_piece(&new_coord);
-
-        match piece {
-          Some(piece) => {
-            if piece.color == color {
-              deltas.remove(i);
-            } else {
-              moves.push(new_coord);
-              deltas.remove(i);
-            }
-          },
-          None => moves.push(new_coord)
-        }
-
-        i += 1;
-      }
-    }
-
-    return moves
-  }
-
   pub fn get_moves(
     &self,
     coordinate: Coordinate
   ) -> Vec<Coordinate> {
     return match self.get_piece(&coordinate) {
       Some(piece) => {
-        let linear_moves_deltas: Vec<i8> = vec![-1, 1, -8, 8];
-        let diagonal_moves_deltas: Vec<i8> = vec![-9, -7, 7, 9];
-        let all_moves_deltas: Vec<i8> = vec![-1, 1, -8, 8, -9, -7, 7, 9];
-
         let mut moves: Vec<Coordinate> = Vec::new();
-
-        /*
-         * Loop trough depth
-         * Loop trough deltas, using while loop and index variable, so it is simple to remove elements
-         * Generate the new coordinate
-         * Validate the new coordinate, not in numerical form, so that we can check if the piece is on the board
-         * Check what piece is standing on the new coordinate
-         * If there is no piece, add the move
-         * If there is a friendly piece, remove the delta from the deltas vector
-         * If there is an enemy piece, add the move and remove the delta from the deltas vector
-         */
+        let numeric = coordinate.as_number(); // Numeric representation of the coordinate
 
         use Pieces::*;
         match piece.breed {
           King => {
-            moves.append(&mut self.get_moves_in_direction(
-              all_moves_deltas,
-              1,
-              coordinate,
-              0,
-              true
-            ));
+            /*
+             * -7 -8 -9
+             * -1  0 +1
+             * +7 +8 +9
+             */
+
+            for delta in [-9, -8, -7, -1, 1, 7, 8, 9].iter() {
+              let new_numeric = numeric as i8 + delta;
+
+              if new_numeric < 0 || new_numeric > 63 {
+                continue
+              }
+
+              let new_coord =
+                Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+
+              if new_coord.is_valid().is_ok()
+                && (new_coord.row as i8 - coordinate.row as i8).abs() <= 1
+                && (new_coord.col as i8 - coordinate.col as i8).abs() <= 1
+              {
+                let on_way_piece = self.get_piece(&new_coord);
+
+                if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color {
+                  moves.push(new_coord);
+                }
+              }
+            }
           },
           Queen => {
-            moves.append(&mut self.get_moves_in_direction(
-              all_moves_deltas,
-              8,
-              coordinate,
-              0,
-              true
-            ));
+            /*
+             * -7 -8 -9
+             * -1  0 +1
+             * +7 +8 +9
+             */
+
+            let mut deltas = vec![-9, -8, -7, -1, 1, 7, 8, 9];
+
+            for depth in 1..8 {
+              for delta in deltas.clone().iter() {
+                let new_numeric = numeric as i8 + delta * depth;
+
+                if new_numeric < 0 || new_numeric > 63 {
+                  continue
+                }
+
+                let new_coord =
+                  Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+
+                if new_coord.is_valid().is_ok()
+                  && (new_coord.row as i8 - coordinate.row as i8).abs() == depth
+                  && (new_coord.col as i8 - coordinate.col as i8).abs() == depth
+                {
+                  let on_way_piece = self.get_piece(&new_coord);
+
+                  if on_way_piece.is_none() {
+                    moves.push(new_coord);
+                  } else {
+                    if on_way_piece.unwrap().color != piece.color {
+                      moves.push(new_coord);
+                    }
+
+                    deltas.retain(|&x| x != *delta);
+                  }
+                }
+              }
+            }
           },
           Rook => {
-            moves.append(&mut self.get_moves_in_direction(
-              linear_moves_deltas,
-              8,
-              coordinate,
-              0,
-              true
-            ));
+            /*
+             * -7 -8 -9
+             * -1  0 +1
+             * +7 +8 +9
+             */
+
+            let mut deltas = vec![-8, -1, 1, 8];
+
+            for depth in 1..8 {
+              for delta in deltas.clone().iter() {
+                let new_numeric = numeric as i8 + delta * depth;
+
+                if new_numeric < 0 || new_numeric > 63 {
+                  continue
+                }
+
+                let new_coord =
+                  Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+
+                if new_coord.is_valid().is_ok()
+                  && (new_coord.row == coordinate.row || new_coord.col == coordinate.col)
+                {
+                  let on_way_piece = self.get_piece(&new_coord);
+
+                  if on_way_piece.is_none() {
+                    moves.push(new_coord);
+                  } else {
+                    if on_way_piece.unwrap().color != piece.color {
+                      moves.push(new_coord);
+                    }
+
+                    deltas.retain(|&x| x != *delta);
+                  }
+                }
+              }
+            }
           },
           Bishop => {
-            moves.append(&mut self.get_moves_in_direction(
-              diagonal_moves_deltas,
-              8,
-              coordinate,
-              0,
-              true
-            ));
+            /*
+             * -7 -8 -9
+             * -1  0 +1
+             * +7 +8 +9
+             */
+
+            let mut deltas = vec![-9, -7, 7, 9];
+
+            for depth in 1..8 {
+              for delta in deltas.clone().iter() {
+                let new_numeric = numeric as i8 + delta * depth;
+
+                if new_numeric < 0 || new_numeric > 63 {
+                  continue
+                }
+
+                let new_coord =
+                  Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+
+                if new_coord.is_valid().is_ok()
+                  && (new_coord.row as i8 - coordinate.row as i8).abs()
+                    == (new_coord.col as i8 - coordinate.col as i8).abs()
+                {
+                  let on_way_piece = self.get_piece(&new_coord);
+
+                  if on_way_piece.is_none() {
+                    moves.push(new_coord);
+                  } else {
+                    if on_way_piece.unwrap().color != piece.color {
+                      moves.push(new_coord);
+                    }
+
+                    deltas.retain(|&x| x != *delta);
+                  }
+                }
+              }
+            }
           },
           Knight => {
-            moves.append(&mut self.get_moves_in_direction(
-              vec![-17, -15, -10, -6, 6, 10, 15, 17],
-              1,
-              coordinate,
-              3,
-              false
-            ));
+            let mut deltas = vec![-17, -15, -10, -6, 6, 10, 15, 17];
+
+            for delta in deltas.clone().iter() {
+              let new_numeric = numeric as i8 + delta;
+
+              if new_numeric < 0 || new_numeric > 63 {
+                continue
+              }
+
+              let new_coord =
+                Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+
+              if new_coord.is_valid().is_ok()
+                && (new_coord.row as i8 - coordinate.row as i8).abs() <= 2
+                && (new_coord.col as i8 - coordinate.col as i8).abs() <= 2
+              {
+                let on_way_piece = self.get_piece(&new_coord);
+
+                if on_way_piece.is_none() {
+                  moves.push(new_coord);
+                } else {
+                  if on_way_piece.unwrap().color != piece.color {
+                    moves.push(new_coord);
+                  }
+
+                  deltas.retain(|&x| x != *delta);
+                }
+              }
+            }
           },
           Pawn => {
-            let mut deltas: Vec<i8> = Vec::new();
+            let increment = if piece.color == Color::White { -1 } else { 1 };
+            let starting_row = if piece.color == Color::White { 6 } else { 1 };
 
-            if piece.color == Color::White {
-              deltas.push(-8);
-              if coordinate.row == 6 {
-                deltas.push(-16);
-              }
-            } else {
-              deltas.push(8);
-              if coordinate.row == 1 {
-                deltas.push(16);
+            let new_coord = coord!((coordinate.row as i8 + increment) as u8, coordinate.col);
+
+            // Just straight moves
+            if new_coord.is_valid().is_ok() {
+              let on_way_piece = self.get_piece(&new_coord);
+
+              if on_way_piece.is_none() {
+                moves.push(new_coord);
+                
+                if coordinate.row == starting_row {
+                  let new_coord = coord!((new_coord.row as i8 + increment) as u8, new_coord.col);
+
+                  if new_coord.is_valid().is_ok() {
+                    let on_way_piece = self.get_piece(&new_coord);
+
+                    if on_way_piece.is_none() {
+                      moves.push(new_coord);
+                    }
+                  }
+                }
               }
             }
 
-            moves.append(&mut self.get_moves_in_direction(deltas, 1, coordinate, 0, true));
+            // Attacking moves
+            let move1 = coord!((coordinate.row as i8 + increment) as u8, coordinate.col - 1);
+            let move2 = coord!((coordinate.row as i8 + increment) as u8, coordinate.col + 1);
+
+            if move1.is_valid().is_ok() {
+              let on_way_piece = self.get_piece(&move1);
+
+              if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
+                moves.push(move1);
+              }
+
+              if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move1 {
+                moves.push(move1);
+              }
+            }
+
+            if move2.is_valid().is_ok() {
+              let on_way_piece = self.get_piece(&move2);
+
+              if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
+                moves.push(move2);
+              }
+
+              if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move2 {
+                moves.push(move2);
+              }
+            }
           }
         }
 
