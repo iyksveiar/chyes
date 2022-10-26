@@ -282,7 +282,7 @@ mod tests {
       * * *
       * K *
       * * *
-      
+
       8 valid moves
     */
 
@@ -806,7 +806,7 @@ mod tests {
     board
       .load_fen(String::from("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1"))
       .expect("Failed to load FEN");
-    assert_eq!(board.get_moves(coord!(2, 3)).len(), 2);
+    assert_eq!(board.get_moves(coord!(3, 3)).len(), 2);
     board.reset();
   }
 
@@ -902,31 +902,31 @@ mod tests {
     let mut board = Board::new();
 
     board.place_piece(piece!(King, White), coord!(1, 1));
-	assert_eq!(board.get_king_coord(Color::White), Some(coord!(1, 1)));
-	board.reset();
+    assert_eq!(board.get_king_coord(Color::White), Some(coord!(1, 1)));
+    board.reset();
 
     board.place_piece(piece!(King, White), coord!(2, 7));
-	assert_eq!(board.get_king_coord(Color::White), Some(coord!(2, 7)));
-	board.reset();
+    assert_eq!(board.get_king_coord(Color::White), Some(coord!(2, 7)));
+    board.reset();
 
     board.place_piece(piece!(King, White), coord!(3, 5));
-	assert_eq!(board.get_king_coord(Color::White), Some(coord!(3, 5)));
-	board.reset();
+    assert_eq!(board.get_king_coord(Color::White), Some(coord!(3, 5)));
+    board.reset();
 
     board.place_piece(piece!(King, White), coord!(5, 2));
-	assert_eq!(board.get_king_coord(Color::White), Some(coord!(5, 2)));
-	board.reset();
+    assert_eq!(board.get_king_coord(Color::White), Some(coord!(5, 2)));
+    board.reset();
 
     board.place_piece(piece!(King, White), coord!(5, 1));
-	assert_eq!(board.get_king_coord(Color::White), Some(coord!(5, 1)));
-	board.reset();
+    assert_eq!(board.get_king_coord(Color::White), Some(coord!(5, 1)));
+    board.reset();
 
     board.place_piece(piece!(King, White), coord!(6, 6));
-	assert_eq!(board.get_king_coord(Color::White), Some(coord!(6, 6)));
-	board.reset();
+    assert_eq!(board.get_king_coord(Color::White), Some(coord!(6, 6)));
+    board.reset();
 
     board.place_piece(piece!(King, White), coord!(6, 3));
-	assert_eq!(board.get_king_coord(Color::White), Some(coord!(6, 3)));
-	board.reset();
+    assert_eq!(board.get_king_coord(Color::White), Some(coord!(6, 3)));
+    board.reset();
   }
 }
