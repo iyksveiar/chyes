@@ -222,6 +222,14 @@ mod tests {
   }
 
   #[test]
+  fn coordinates_from_notation() {
+    assert_eq!(coord!(1, 1), Coordinate::from_notation("b7".to_string()).unwrap());
+    assert_eq!(coord!(3, 4), Coordinate::from_notation("e5".to_string()).unwrap());
+    assert_eq!(coord!(5, 7), Coordinate::from_notation("h3".to_string()).unwrap());
+    assert_eq!(coord!(7, 7), Coordinate::from_notation("h1".to_string()).unwrap());
+  }
+
+  #[test]
   fn king_moves() {
     let mut board = Board::new();
 
