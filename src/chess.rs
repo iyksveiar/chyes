@@ -624,7 +624,7 @@ impl Board {
 
               if on_way_piece.is_none() {
                 moves.push(new_coord);
-                
+
                 if coordinate.row == starting_row {
                   let new_coord = coord!((new_coord.row as i8 + increment) as u8, new_coord.col);
 
@@ -650,7 +650,8 @@ impl Board {
                 moves.push(move1);
               }
 
-              if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move1 {
+              if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move1
+              {
                 moves.push(move1);
               }
             }
@@ -662,7 +663,8 @@ impl Board {
                 moves.push(move2);
               }
 
-              if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move2 {
+              if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move2
+              {
                 moves.push(move2);
               }
             }
