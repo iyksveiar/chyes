@@ -24,7 +24,6 @@ mod tests {
   use super::*;
 
   #[test]
-  #[ignore]
   fn is_in_check() {
     let mut board: Board = Board::new();
 
