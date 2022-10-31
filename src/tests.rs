@@ -830,7 +830,6 @@ mod tests {
   }
 
   #[test]
-  #[ignore]
   fn moves_that_lead_to_check() {
     let mut board = Board::new();
 
