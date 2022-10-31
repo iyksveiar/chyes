@@ -653,31 +653,43 @@ impl Board {
         }
 
         // Attacking moves
-        let move1 = coord!((coordinate.row as i8 + increment) as u8, coordinate.col - 1);
-        let move2 = coord!((coordinate.row as i8 + increment) as u8, coordinate.col + 1);
+        let move1_numeric = coordinate.row as i8 + increment;
+        let move2_numeric = coordinate.row as i8 + increment;
 
-        if move1.is_valid().is_ok() {
-          let on_way_piece = self.get_piece(&move1);
+        if move1_numeric >= 0 && move1_numeric <= 63 &&
+           coordinate.col as i8 - 1 >= 0 && coordinate.col as i8 - 1 <= 7
+        {
+            let move1 = coord!(move1_numeric as u8, coordinate.col - 1);
 
-          if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
-            moves.push(move1);
-          }
+            if move1.is_valid().is_ok() {
+              let on_way_piece = self.get_piece(&move1);
 
-          if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move1 {
-            moves.push(move1);
-          }
+              if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
+                moves.push(move1);
+              }
+
+              if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move1 {
+                moves.push(move1);
+              }
+            }
         }
 
-        if move2.is_valid().is_ok() {
-          let on_way_piece = self.get_piece(&move2);
+        if move2_numeric >= 0 && move2_numeric <= 63 &&
+           coordinate.col as i8 + 1 >= 0 && coordinate.col as i8 + 1 <= 7
+        {
+            let move2 = coord!(move2_numeric as u8, coordinate.col + 1);
 
-          if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
-            moves.push(move2);
-          }
+            if move2.is_valid().is_ok() {
+              let on_way_piece = self.get_piece(&move2);
 
-          if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move2 {
-            moves.push(move2);
-          }
+              if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
+                moves.push(move2);
+              }
+
+              if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move2 {
+                moves.push(move2);
+              }
+            }
         }
       }
     }
