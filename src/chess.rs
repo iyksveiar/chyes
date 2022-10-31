@@ -488,16 +488,19 @@ impl Board {
 
             let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
 
-            if new_coord.is_valid().is_ok()
-            {
+            if new_coord.is_valid().is_ok() {
               if [-7, -9, 7, 9].contains(delta) {
-                if (new_coord.row as i8 - coordinate.row as i8).abs() != (new_coord.col as i8 - coordinate.col as i8).abs() {
+                if (new_coord.row as i8 - coordinate.row as i8).abs()
+                  != (new_coord.col as i8 - coordinate.col as i8).abs()
+                {
                   continue
                 }
               }
 
               if [-8, -1, 1, 8].contains(delta) {
-                if (new_coord.row as i8 - coordinate.row as i8).abs() != 0 && (new_coord.col as i8 - coordinate.col as i8).abs() != 0 {
+                if (new_coord.row as i8 - coordinate.row as i8).abs() != 0
+                  && (new_coord.col as i8 - coordinate.col as i8).abs() != 0
+                {
                   continue
                 }
               }
