@@ -425,7 +425,7 @@ impl Board {
     }
   }
 
-  pub fn get_moves(
+  fn generate_pseudo_legal_moves(
     &self,
     coordinate: Coordinate
   ) -> Vec<Coordinate> {
@@ -489,9 +489,19 @@ impl Board {
             let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
 
             if new_coord.is_valid().is_ok()
-              && (new_coord.row as i8 - coordinate.row as i8).abs() == depth
-              && (new_coord.col as i8 - coordinate.col as i8).abs() == depth
             {
+              if [-7, -9, 7, 9].contains(delta) {
+                if (new_coord.row as i8 - coordinate.row as i8).abs() != (new_coord.col as i8 - coordinate.col as i8).abs() {
+                  continue
+                }
+              }
+
+              if [-8, -1, 1, 8].contains(delta) {
+                if (new_coord.row as i8 - coordinate.row as i8).abs() != 0 && (new_coord.col as i8 - coordinate.col as i8).abs() != 0 {
+                  continue
+                }
+              }
+
               let on_way_piece = self.get_piece(&new_coord);
 
               if on_way_piece.is_none() {
@@ -672,6 +682,67 @@ impl Board {
     return moves
   }
 
+  pub fn move_piece(
+    &mut self,
+    start: Coordinate,
+    target: Coordinate
+  ) -> Result<Option<Piece>, String> {
+    let start_piece = self.get_piece(&start);
+
+    if start_piece.is_none() {
+      return Err(String::from("Trying to move empty square"))
+    }
+
+    let old_piece = self.get_piece(&target);
+
+    if old_piece.is_some() && old_piece.unwrap().color == start_piece.unwrap().color {
+      return Err(String::from(
+        "Trying to move to square with same color piece"
+      ))
+    }
+
+    self.place_piece(start_piece.unwrap(), target);
+
+    // Remove start piece from hashmap
+    self.pieces.remove(&start);
+
+    // TODO: En passant
+    // TODO: Castling
+    // TODO: Promotion
+
+    // Incrementing clocks
+    self.halfmove_clock += 1;
+    if self.turn == Color::Black {
+      self.fullmove_number += 1;
+    }
+
+    // Switching turn
+    self.turn = if self.turn == Color::White {
+      Color::Black
+    } else {
+      Color::White
+    };
+
+    return Ok(old_piece)
+  }
+
+  pub fn generate_moves(
+    &self,
+    coord: Coordinate
+  ) -> Vec<Coordinate> {
+    // Get pseudo-legal moves and filter out moves that would put the king in check
+    let mut moves = self.generate_pseudo_legal_moves(coord);
+
+    moves.retain(|&x| {
+      let mut new_board = self.clone();
+      new_board.move_piece(coord, x).unwrap();
+
+      return !new_board.is_in_check(self.turn)
+    });
+
+    return moves
+  }
+
   pub fn get_king_coord(
     &self,
     color: Color
@@ -700,7 +771,7 @@ impl Board {
 
     for (coord, piece) in &self.pieces {
       if piece.color != color {
-        let moves = self.get_moves(*coord);
+        let moves = self.generate_pseudo_legal_moves(*coord);
 
         if moves.contains(&king_coord) {
           return true
