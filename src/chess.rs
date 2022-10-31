@@ -8,7 +8,9 @@ const WHITE_PIECES: [&str; 6] = ["♚", "♛", "♜", "♝", "♞", "♟"];
 // Macro to expand coord!(x, y) to Coordinate { row: x, col: y }
 macro_rules! coord {
   ($x:expr, $y:expr) => {
-    Coordinate { row: $x, col: $y }
+    Coordinate {
+      row: $x, col: $y
+    }
   };
 }
 
@@ -17,975 +19,778 @@ macro_rules! piece {
   ($piece:ident, $color:ident) => {
     Piece {
       breed: Pieces::$piece,
-      color: Color::$color,
+      color: Color::$color
     }
   };
 }
 
 // Coordinate struct
-// NOTE: I tnink that using separate struct for such a simple thing is a bit overkill
-// And on top of that it slows down the program a bit (I think)
-#[derive(Eq, Hash, Clone, Copy, PartialEq, Debug)]
+#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Coordinate {
-  pub row: i8,
-  pub col: i8,
+  pub row: u8,
+  pub col: u8
 }
 
-#[allow(dead_code)]
 impl Coordinate {
-  /*
-    56 57 58 59 60 61 62 63
-    48 49 50 51 52 53 54 55
-    40 41 42 43 44 45 46 47
-    32 33 34 35 36 37 38 39
-    24 25 26 27 28 29 30 31
-    16 17 18 19 20 21 22 23
-    08 09 10 11 12 13 14 15
-    00 01 02 03 04 05 06 07
-  */
+  // We assume that the coordinate is valid, when we transform or use it
+  // Except when we need to construct a new coordinate
 
-  pub fn to_string(&self) -> String {
-    /* Convert coordinate to string */
+  // (0, 0) is the top left corner of the board
 
-    let mut result = String::new();
+  pub fn to_notation(&self) -> String {
+    // (0, 0) -> "a8"
+    // (7, 7) -> "h1"
 
-    // Use cols to convert to letters
-    const COLS: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    let mut notation = String::new();
 
-    result.push(COLS[self.col as usize]);
-    result.push_str(&(8 - self.row).to_string());
+    // Add the column
+    notation.push((self.col + 97) as char);
 
-    return result;
+    // Add the row
+    notation.push((56 - self.row) as char);
+
+    return notation
   }
 
-  pub fn as_number(&self) -> i8 {
-    // Convert coordinate to number
-    // NOTE: This starts from left bottom corner, so we need to reverse the row
-    return (7 - self.row) * 8 + self.col;
-  }
+  pub fn from_notation(notation: String) -> Result<Self, ()> {
+    // a8 -> (0, 0)
+    // h1 -> (7, 7)
 
-  pub fn from_number(num: i8) -> Coordinate {
-    // Convert number to coordinate
-    // NOTE: This starts from left bottom corner, so we need to reverse the row
-    Coordinate {
-      row: 7 - (num / 8),
-      col: num % 8,
+    // Check if the notation is valid
+    if notation.len() != 2 {
+      return Err(())
     }
+
+    // Get the column
+    let col = notation.chars().nth(0).unwrap() as u8 - 97;
+
+    // Get the row
+    let row = 56 - notation.chars().nth(1).unwrap() as u8;
+
+    // Check if the column and row are valid
+    if col > 7 || row > 7 {
+      return Err(())
+    }
+
+    return Ok(coord!(row, col))
+  }
+
+  pub fn as_number(&self) -> u8 {
+    // Converts a coordinate to a number
+    /*
+     * 00 01 02 03 04 05 06 07
+     * 08 09 10 11 12 13 14 15
+     * 16 17 18 19 20 21 22 23
+     * 24 25 26 27 28 29 30 31
+     * 32 33 34 35 36 37 38 39
+     * 40 41 42 43 44 45 46 47
+     * 48 49 50 51 52 53 54 55
+     * 56 57 58 59 60 61 62 63
+     */
+
+    return self.row * 8 + self.col
+  }
+
+  pub fn from_number(number: u8) -> Result<Self, ()> {
+    // Converts a number to a coordinate
+    if number > 63 {
+      return Err(())
+    }
+
+    return Ok(coord!(number / 8, number % 8))
+  }
+
+  pub fn is_valid(&self) -> Result<(), ()> {
+    // Check if the coordinate is valid
+    if self.row > 7 || self.col > 7 {
+      return Err(())
+    }
+
+    return Ok(())
   }
 }
 
-// Chess Pieces
-#[derive(Eq, Hash, Clone, Copy, PartialEq, Debug)]
+#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Pieces {
   King,
   Queen,
   Rook,
   Bishop,
   Knight,
-  Pawn,
-  Empty,
+  Pawn
 }
 
-#[derive(Hash, Eq, Clone, Copy, PartialEq, Debug)]
+#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Color {
-  White,
   Black,
+  White
 }
 
-#[derive(Hash, Eq, Clone, Copy, PartialEq, Debug)]
+#[derive(Hash, Clone, Copy, Debug)]
 pub struct Piece {
   pub breed: Pieces,
-  pub color: Color,
+  pub color: Color
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Board {
-  pub board: [[Piece; 8]; 8], // 2D array of Pieces
-  pub turn: Color,
-  pub castling_rights: [bool; 4], // 0: white king side, 1: white queen side, 2: black king side, 3: black queen side
-  pub white_pieces: Box<HashMap<Coordinate, Piece>>,
-  pub black_pieces: Box<HashMap<Coordinate, Piece>>,
+  pub turn:                 Color,
+  pub pieces:               HashMap<Coordinate, Piece>,
   pub en_passant_target_sq: Option<Coordinate>,
-  halfmove_clock: i8,
-  fullmove_number: i8,
+  pub castling:             [bool; 4], // [Black King, Black Queen, White King, White Queen]
+  pub halfmove_clock:       u16,
+  pub fullmove_number:      u16
 }
 
 #[allow(dead_code)]
 impl Board {
+  pub fn default() -> Self {
+    let mut result = Board::new();
+    result
+      .load_fen(String::from(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      ))
+      .expect("Could not load FEN");
+    return result
+  }
+
   pub fn new() -> Self {
     Board {
-      board: [[piece!(Empty, White); 8]; 8],
-      turn: Color::White,
-      castling_rights: [false, false, false, false],
-      white_pieces: Box::new(HashMap::new()),
-      black_pieces: Box::new(HashMap::new()),
+      turn:                 Color::White,
+      pieces:               HashMap::new(),
       en_passant_target_sq: None,
-      halfmove_clock: 0,
-      fullmove_number: 1,
+      castling:             [true, true, true, true],
+      halfmove_clock:       0,
+      fullmove_number:      1
     }
   }
 
   pub fn reset(&mut self) {
-    for i in 0..8 {
-      for j in 0..8 {
-        self.board[i][j] = piece!(Empty, White);
-      }
-    }
-
     self.turn = Color::White;
-    self.castling_rights = [false, false, false, false];
-    self.white_pieces = Box::new(HashMap::new());
-    self.black_pieces = Box::new(HashMap::new());
+    self.pieces.clear();
     self.en_passant_target_sq = None;
+    self.castling = [true, true, true, true];
     self.halfmove_clock = 0;
     self.fullmove_number = 1;
   }
 
   pub fn load_fen(
     &mut self,
-    fen: &str,
-  ) {
-    // function to parse fen string
-    // source: https://en.wikipedia.org/wiki/forsyth%e2%80%93edwards_notation
+    fen: String
+  ) -> Result<(), ()> {
+    // Source: https://en.wikipedia.org/wiki/forsyth%e2%80%93edwards_notation
 
-    let mut fen_array = fen.split(' ');
-    let fen_board = fen_array.next().unwrap();
-    let fen_turn = fen_array.next().unwrap();
-    let fen_castling = fen_array.next().unwrap();
-    let _fen_en_passant = fen_array.next().unwrap();
-    let _fen_half_move = fen_array.next().unwrap(); // todo
-    let _fen_full_move = fen_array.next().unwrap(); // todo
+    // Splitting the FEN string into 7 parts
+    let mut fen_parts = fen.split(" ");
 
-    self.reset(); // Reset the board before loading the fen
+    let piece_placement = fen_parts.next().ok_or(())?;
+    let active_color = fen_parts.next().ok_or(())?;
+    let castling_availability = fen_parts.next().ok_or(())?;
+    let en_passant_target_square = fen_parts.next().ok_or(())?;
+    let halfmove_clock = fen_parts.next().ok_or(())?;
+    let fullmove_number = fen_parts.next().ok_or(())?;
 
-    // Change the turn
-    self.turn = match fen_turn {
-      "w" => Color::White,
-      "b" => Color::Black,
-      _ => panic!("invalid turn"),
-    };
+    self.reset();
 
-    // parse the Board
-    let mut row: i8 = 0;
-    let mut col: i8 = 0;
-    let mut piece: Option<Piece> = None;
+    // Piece placement
+    let mut row = 0;
+    let mut col = 0;
 
-    for c in fen_board.chars() {
+    for c in piece_placement.chars() {
       if c == '/' {
         row += 1;
-        col = 0; // because at the end of the loop, col will be incremented
+        col = 0;
       } else if c.is_digit(10) {
-        col += c.to_digit(10).unwrap() as i8;
+        col += c.to_digit(10).unwrap() as u8;
       } else {
-        piece = match c {
-          'K' => Some(piece!(King, White)),
-          'Q' => Some(piece!(Queen, White)),
-          'R' => Some(piece!(Rook, White)),
-          'B' => Some(piece!(Bishop, White)),
-          'N' => Some(piece!(Knight, White)),
-          'P' => Some(piece!(Pawn, White)),
-          'k' => Some(piece!(King, Black)),
-          'q' => Some(piece!(Queen, Black)),
-          'r' => Some(piece!(Rook, Black)),
-          'b' => Some(piece!(Bishop, Black)),
-          'n' => Some(piece!(Knight, Black)),
-          'p' => Some(piece!(Pawn, Black)),
-          _ => Some(piece!(Empty, White)),
+        let color = match c.is_uppercase() {
+          true => Color::White,
+          false => Color::Black
         };
-      };
 
-      // if Piece is not None, then insert the Piece
-      if piece != None {
-        self.place_piece(piece.unwrap(), coord!(row, col));
-        piece = None;
+        let piece = match c.to_ascii_lowercase() {
+          'k' => Pieces::King,
+          'q' => Pieces::Queen,
+          'r' => Pieces::Rook,
+          'b' => Pieces::Bishop,
+          'n' => Pieces::Knight,
+          'p' => Pieces::Pawn,
+          _ => return Err(())
+        };
+
+        self.pieces.insert(
+          coord!(row, col),
+          Piece {
+            breed: piece,
+            color
+          }
+        );
         col += 1;
       }
     }
 
-    // Castling
-    self.castling_rights = [
-      fen_castling.contains('K'),
-      fen_castling.contains('Q'),
-      fen_castling.contains('k'),
-      fen_castling.contains('q'),
-    ];
+    // Active color
+    self.turn = match active_color {
+      "w" => Color::White,
+      "b" => Color::Black,
+      _ => return Err(())
+    };
+
+    // Castling availability
+    for c in castling_availability.chars() {
+      match c {
+        'K' => self.castling[2] = true,
+        'Q' => self.castling[3] = true,
+        'k' => self.castling[0] = true,
+        'q' => self.castling[1] = true,
+        '-' => (),
+        _ => return Err(())
+      }
+    }
+
+    // En passant target square
+    if en_passant_target_square != "-" {
+      self.en_passant_target_sq = Some(Coordinate::from_notation(
+        en_passant_target_square.to_string()
+      )?);
+    }
+
+    // Halfmove clock
+    self.halfmove_clock = halfmove_clock.parse().map_err(|_| ())?;
+
+    // Fullmove number
+    self.fullmove_number = fullmove_number.parse().map_err(|_| ())?;
+
+    return Ok(())
   }
 
   pub fn get_fen(&self) -> String {
-    // function to convert the Board to FEN
-    // source: https://en.wikipedia.org/wiki/Forsyth%e2%80%93Edwards_notation
+    // Source: https://en.wikipedia.org/wiki/forsyth%e2%80%93edwards_notation
 
-    let mut fen_board = String::new();
-    let mut empty_count: u8 = 0;
+    let mut fen = String::new();
 
-    for i in 0..8 {
-      for j in 0..8 {
-        let piece = self.board[i][j];
+    // Piece placement
+    for row in 0..8 {
+      let mut empty_squares = 0;
 
-        if piece.breed == Pieces::Empty {
-          empty_count += 1;
-        } else {
-          if empty_count > 0 {
-            fen_board.push_str(&empty_count.to_string());
-            empty_count = 0;
+      for col in 0..8 {
+        let coord = coord!(row, col);
+
+        if self.pieces.contains_key(&coord) {
+          if empty_squares > 0 {
+            fen.push_str(&empty_squares.to_string());
+            empty_squares = 0;
           }
 
-          use Color::*;
-          use Pieces::*;
+          let piece = self.pieces.get(&coord).unwrap();
 
-          let chr = match piece.breed {
-            King => 'k',
-            Queen => 'q',
-            Rook => 'r',
-            Bishop => 'b',
-            Knight => 'n',
-            Pawn => 'p',
-            _ => panic!("Invalid piece"),
+          let c = match piece.breed {
+            Pieces::King => 'K',
+            Pieces::Queen => 'Q',
+            Pieces::Rook => 'R',
+            Pieces::Bishop => 'B',
+            Pieces::Knight => 'N',
+            Pieces::Pawn => 'P'
           };
 
-          fen_board.push(
-            // If the piece is white, then uppercase the character
-            match piece.color {
-              White => chr.to_ascii_uppercase(),
-              Black => chr,
-            },
-          );
+          fen.push(match piece.color {
+            Color::White => c,
+            Color::Black => c.to_ascii_lowercase()
+          });
+        } else {
+          empty_squares += 1;
         }
       }
 
-      if empty_count > 0 {
-        fen_board.push_str(&empty_count.to_string());
-        empty_count = 0;
+      if empty_squares > 0 {
+        fen.push_str(&empty_squares.to_string());
       }
 
-      if i != 7 {
-        fen_board.push('/');
+      if row < 7 {
+        fen.push('/');
       }
     }
 
-    // Separated by spaces add info about the turn, castling, en passant, and halfmove clock
-    fen_board.push(' ');
+    fen.push(' ');
 
-    fen_board.push(match self.turn {
+    // Active color
+    fen.push(match self.turn {
       Color::White => 'w',
-      Color::Black => 'b',
+      Color::Black => 'b'
     });
 
-    // TODO: check if castling is possible
-    fen_board.push(' ');
+    fen.push(' ');
 
-    const CASTLING: [char; 4] = ['K', 'Q', 'k', 'q'];
+    // Castling availability
+    if self.castling.iter().all(|&x| !x) {
+      fen.push('-');
+    } else {
+      if self.castling[2] {
+        fen.push('K');
+      }
 
-    for i in 0..4 {
-      if self.castling_rights[i] {
-        fen_board.push(CASTLING[i]);
+      if self.castling[3] {
+        fen.push('Q');
+      }
+
+      if self.castling[0] {
+        fen.push('k');
+      }
+
+      if self.castling[1] {
+        fen.push('q');
       }
     }
 
-    fen_board.push(' ');
+    fen.push(' ');
 
-    if self.en_passant_target_sq == None {
-      fen_board.push('-');
-    } else {
-      fen_board.push_str(&self.en_passant_target_sq.unwrap().to_string());
-    }
+    // En passant target square
+    match self.en_passant_target_sq {
+      Some(coord) => fen.push_str(&coord.to_notation()),
+      None => fen.push('-')
+    };
 
-    fen_board.push(' ');
-    fen_board.push_str(&self.halfmove_clock.to_string());
+    fen.push(' ');
 
-    fen_board.push(' ');
-    fen_board.push_str(&self.fullmove_number.to_string());
+    // Halfmove clock
+    fen.push_str(&self.halfmove_clock.to_string());
 
-    return fen_board;
-  }
+    fen.push(' ');
 
-  pub fn default() -> Self {
-    let mut result = Board::new();
-    result.load_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    return result;
+    // Fullmove number
+    fen.push_str(&self.fullmove_number.to_string());
+
+    return fen
   }
 
   pub fn place_piece(
     &mut self,
     piece: Piece,
-    coord: Coordinate,
-  ) {
-    // Checking bounds
-    if coord.row > 7 || coord.col > 7 {
-      panic!("invalid Coordinates {} {}", coord.row, coord.col);
+    coord: Coordinate
+  ) -> Option<Piece> {
+    // Checking if the coordinate is valid
+    match coord.is_valid() {
+      Ok(_) => (),
+      Err(()) => panic!("Invalid coordinate")
     }
 
-    self.board[coord.row as usize][coord.col as usize] = piece;
+    let old_piece = self.get_piece(&coord);
 
-    // Add to the piece map
-    match piece.color {
-      Color::White => &mut self.white_pieces,
-      Color::Black => &mut self.black_pieces,
+    self.pieces.insert(coord, piece);
+
+    return old_piece
+  }
+
+  pub fn get_piece(
+    &self,
+    coordinate: &Coordinate
+  ) -> Option<Piece> {
+    let result = self.pieces.get(coordinate);
+
+    return match result {
+      Some(piece_ptr) => Some(piece_ptr.clone()),
+      None => None
     }
-    .insert(coord, piece);
   }
 
   pub fn draw(&self) {
-    /* Function to draw the board */
-
     for row in 0..8 {
       for col in 0..8 {
-        let piece: Piece = self.board[row][col];
+        let piece = self.get_piece(&coord!(row, col));
 
-        let pieces_str: &[&str; 6] = match piece.color {
-          Color::White => &WHITE_PIECES,
-          Color::Black => &BLACK_PIECES,
-        };
+        match piece {
+          Some(piece) => {
+            let pieces_str: &[&str; 6] = match piece.color {
+              Color::White => &WHITE_PIECES,
+              Color::Black => &BLACK_PIECES
+            };
 
-        // match the Piece to the correct character
-        use Pieces::*;
-        print!(
-          "{} ",
-          match piece.breed {
-            King => pieces_str[0],
-            Queen => pieces_str[1],
-            Rook => pieces_str[2],
-            Bishop => pieces_str[3],
-            Knight => pieces_str[4],
-            Pawn => pieces_str[5],
-            Empty => ".",
-          }
-        );
+            use Pieces::*;
+            print!(
+              "{} ",
+              match piece.breed {
+                King => pieces_str[0],
+                Queen => pieces_str[1],
+                Rook => pieces_str[2],
+                Bishop => pieces_str[3],
+                Knight => pieces_str[4],
+                Pawn => pieces_str[5]
+              }
+            );
+          },
+          None => print!(". ")
+        }
       }
       println!();
     }
   }
 
-  pub fn get_diagonal_moves(
+  fn generate_pseudo_legal_moves(
     &self,
-    coord: Coordinate,
-    color: Color,
+    coordinate: Coordinate
   ) -> Vec<Coordinate> {
-    /* Function to get all diagonal moves from given coordinate */
-
-    let mut result: Vec<Coordinate> = Vec::new();
-    let mut piece: Piece;
-
-    let (row, col) = (coord.row, coord.col);
-    let (mut new_row, mut new_col): (i8, i8);
-    let (mut left_up, mut left_down, mut right_up, mut right_down) = (true, true, true, true);
-
-    for delta in 1..8 {
-      // left up
-      if left_up {
-        new_row = row + delta;
-        new_col = col - delta;
-
-        if (new_row >= 0 && new_col >= 0) && (new_row < 8 && new_col < 8) {
-          piece = self.board[new_row as usize][new_col as usize];
-
-          if piece.breed != Pieces::Empty {
-            if piece.color != color {
-              result.push(coord!(new_row, new_col));
-              left_up = false;
-            } else if piece.color == color {
-              left_up = false;
-            }
-          } else {
-            result.push(coord!(new_row, new_col));
-          }
-        } else {
-          left_up = false;
-        }
-      }
-
-      // left down
-      if left_down {
-        new_row = row - delta;
-        new_col = col - delta;
-
-        if (new_row >= 0 && new_col >= 0) && (new_row < 8 && new_col < 8) {
-          piece = self.board[new_row as usize][new_col as usize];
-
-          if piece.breed != Pieces::Empty {
-            if piece.color != color {
-              result.push(coord!(new_row, new_col));
-              left_down = false;
-            } else if piece.color == color {
-              left_down = false;
-            }
-          } else {
-            result.push(coord!(new_row, new_col));
-          }
-        } else {
-          left_down = false;
-        }
-      }
-
-      // right up
-      if right_up {
-        new_row = row + delta;
-        new_col = col + delta;
-
-        if (new_row >= 0 && new_col >= 0) && (new_row < 8 && new_col < 8) {
-          piece = self.board[new_row as usize][new_col as usize];
-
-          if piece.breed != Pieces::Empty {
-            if piece.color != color {
-              result.push(coord!(new_row, new_col));
-              right_up = false;
-            } else if piece.color == color {
-              right_up = false;
-            }
-          } else {
-            result.push(coord!(new_row, new_col));
-          }
-        } else {
-          right_up = false;
-        }
-      }
-
-      // right down
-      if right_down {
-        new_row = row - delta;
-        new_col = col + delta;
-
-        if (new_row >= 0 && new_col >= 0) && (new_row < 8 && new_col < 8) {
-          piece = self.board[new_row as usize][new_col as usize];
-
-          if piece.breed != Pieces::Empty {
-            if piece.color != color {
-              result.push(coord!(new_row, new_col));
-              right_down = false;
-            } else if piece.color == color {
-              right_down = false;
-            }
-          } else {
-            result.push(coord!(new_row, new_col));
-          }
-        } else {
-          right_down = false;
-        }
-      }
-    }
-
-    return result;
-  }
-
-  pub fn get_linear_moves(
-    &self,
-    coord: Coordinate,
-    color: Color,
-  ) -> Vec<Coordinate> {
-    // function to get all linear moves
-    let mut result: Vec<Coordinate> = Vec::new();
-    let mut piece: Piece;
-    let row = coord.row;
-    let col = coord.col;
-    let (mut new_row, mut new_col): (i8, i8);
-    let (mut up, mut down, mut left, mut right) = (true, true, true, true);
-
-    for delta in 1..8 {
-      // up
-      if up {
-        new_row = row + delta;
-        new_col = col;
-
-        if (new_row >= 0 && new_col >= 0) && (new_row < 8 && new_col < 8) {
-          piece = self.board[new_row as usize][new_col as usize];
-
-          if piece.breed != Pieces::Empty {
-            if piece.color != color {
-              result.push(coord!(new_row, new_col));
-              up = false;
-            } else if piece.color == color {
-              up = false;
-            }
-          } else {
-            result.push(coord!(new_row, new_col));
-          }
-        } else {
-          up = false;
-        }
-      }
-
-      // down
-      if down {
-        new_row = row - delta;
-        new_col = col;
-
-        if (new_row >= 0 && new_col >= 0) && (new_row < 8 && new_col < 8) {
-          piece = self.board[new_row as usize][new_col as usize];
-
-          if piece.breed != Pieces::Empty {
-            if piece.color != color {
-              result.push(coord!(new_row, new_col));
-              down = false;
-            } else if piece.color == color {
-              down = false;
-            }
-          } else {
-            result.push(coord!(new_row, new_col));
-          }
-        } else {
-          down = false;
-        }
-      }
-
-      // left
-      if left {
-        new_row = row;
-        new_col = col - delta;
-
-        if (new_row >= 0 && new_col >= 0) && (new_row < 8 && new_col < 8) {
-          piece = self.board[new_row as usize][new_col as usize];
-
-          if piece.breed != Pieces::Empty {
-            if piece.color != color {
-              result.push(coord!(new_row, new_col));
-              left = false;
-            } else if piece.color == color {
-              left = false;
-            }
-          } else {
-            result.push(coord!(new_row, new_col));
-          }
-        } else {
-          left = false;
-        }
-      }
-
-      // right
-      if right {
-        new_row = row;
-        new_col = col + delta;
-
-        if (new_row >= 0 && new_col >= 0) && (new_row < 8 && new_col < 8) {
-          piece = self.board[new_row as usize][new_col as usize];
-
-          if piece.breed != Pieces::Empty {
-            if piece.color != color {
-              result.push(coord!(new_row, new_col));
-              right = false;
-            } else if piece.color == color {
-              right = false;
-            }
-          } else {
-            result.push(coord!(new_row, new_col));
-          }
-        } else {
-          right = false;
-        }
-      }
-    }
-
-    return result;
-  }
-
-  pub fn modify_sq(
-    &mut self,
-    coord: Coordinate,
-    new_piece: Piece,
-  ) -> Option<Piece> {
-    let old_piece = self.get_piece(coord);
-
-    // Checking if the coordinate is valid
-    if coord.row < 0 || coord.row > 7 || coord.col < 0 || coord.col > 7 {
-      return None;
-    }
-
-    self.board[coord.row as usize][coord.col as usize] = new_piece;
-
-    // Returns piece from square if there was a piece
-    return match old_piece {
-      Some(piece) => Some(piece),
-      None => None,
-    };
-  }
-
-  pub fn apply_move(
-    &mut self,
-    starting: Coordinate,
-    ending: Coordinate,
-  ) -> Option<Piece> {
-    // Returns the piece that was captured
-    let piece = self.get_piece(starting);
+    let piece = self.get_piece(&coordinate);
 
     if piece.is_none() {
-      return None;
+      return Vec::new()
     }
 
     let piece = piece.unwrap();
-    let captured_piece = self.modify_sq(ending, piece);
-    self.modify_sq(
-      starting,
-      Piece {
-        breed: Pieces::Empty,
-        color: piece.color,
-      },
-    );
+    let mut moves: Vec<Coordinate> = Vec::new();
+    let numeric = coordinate.as_number(); // Numeric representation of the coordinate
 
-    if piece.breed == Pieces::Pawn && (ending.row - starting.row).abs() == 2 {
-      let inc = match piece.color {
-        Color::White => -1,
-        Color::Black => 1,
-      };
+    use Pieces::*;
+    match piece.breed {
+      King => {
+        /*
+         * -7 -8 -9
+         * -1  0 +1
+         * +7 +8 +9
+         */
 
-      // Setting a target square as a square behind the pawn
-      /*
-      	* . . .
-      	* . # .
-      	* . P .
-      	* P - Pawn that made a double move
-      	* # - Target square for en passant
-      	*/
+        for delta in [-9, -8, -7, -1, 1, 7, 8, 9].iter() {
+          let new_numeric = numeric as i8 + delta;
 
-      self.en_passant_target_sq = Some(coord!(ending.row + inc, ending.col));
-    }
+          if new_numeric < 0 || new_numeric > 63 {
+            continue
+          }
 
-    // Modify the map of pieces
-    match piece.color {
-      Color::White => &mut self.white_pieces,
-      Color::Black => &mut self.black_pieces,
-    }
-    .insert(ending, piece);
+          let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
 
-    match piece.color {
-      Color::White => &mut self.white_pieces,
-      Color::Black => &mut self.black_pieces,
-    }
-    .remove(&starting);
+          if new_coord.is_valid().is_ok()
+            && (new_coord.row as i8 - coordinate.row as i8).abs() <= 1
+            && (new_coord.col as i8 - coordinate.col as i8).abs() <= 1
+          {
+            let on_way_piece = self.get_piece(&new_coord);
 
-    match captured_piece {
-      Some(piece) => {
-        match piece.color {
-          Color::White => &mut self.black_pieces,
-          Color::Black => &mut self.white_pieces,
+            if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color {
+              moves.push(new_coord);
+            }
+          }
         }
-        .remove(&ending);
       },
-      None => {},
+      Queen => {
+        /*
+         * -7 -8 -9
+         * -1  0 +1
+         * +7 +8 +9
+         */
+
+        let mut deltas = vec![-9, -8, -7, -1, 1, 7, 8, 9];
+
+        for depth in 1..8 {
+          for delta in deltas.clone().iter() {
+            let new_numeric = numeric as i8 + delta * depth;
+
+            if new_numeric < 0 || new_numeric > 63 {
+              continue
+            }
+
+            let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+
+            if new_coord.is_valid().is_ok() {
+              if [-7, -9, 7, 9].contains(delta) {
+                if (new_coord.row as i8 - coordinate.row as i8).abs()
+                  != (new_coord.col as i8 - coordinate.col as i8).abs()
+                {
+                  continue
+                }
+              }
+
+              if [-8, -1, 1, 8].contains(delta) {
+                if (new_coord.row as i8 - coordinate.row as i8).abs() != 0
+                  && (new_coord.col as i8 - coordinate.col as i8).abs() != 0
+                {
+                  continue
+                }
+              }
+
+              let on_way_piece = self.get_piece(&new_coord);
+
+              if on_way_piece.is_none() {
+                moves.push(new_coord);
+              } else {
+                if on_way_piece.unwrap().color != piece.color {
+                  moves.push(new_coord);
+                }
+
+                deltas.retain(|&x| x != *delta);
+              }
+            }
+          }
+        }
+      },
+      Rook => {
+        /*
+         * -7 -8 -9
+         * -1  0 +1
+         * +7 +8 +9
+         */
+
+        let mut deltas = vec![-8, -1, 1, 8];
+
+        for depth in 1..8 {
+          for delta in deltas.clone().iter() {
+            let new_numeric = numeric as i8 + delta * depth;
+
+            if new_numeric < 0 || new_numeric > 63 {
+              continue
+            }
+
+            let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+
+            if new_coord.is_valid().is_ok()
+              && (new_coord.row == coordinate.row || new_coord.col == coordinate.col)
+            {
+              let on_way_piece = self.get_piece(&new_coord);
+
+              if on_way_piece.is_none() {
+                moves.push(new_coord);
+              } else {
+                if on_way_piece.unwrap().color != piece.color {
+                  moves.push(new_coord);
+                }
+
+                deltas.retain(|&x| x != *delta);
+              }
+            }
+          }
+        }
+      },
+      Bishop => {
+        /*
+         * -7 -8 -9
+         * -1  0 +1
+         * +7 +8 +9
+         */
+
+        let mut deltas = vec![-9, -7, 7, 9];
+
+        for depth in 1..8 {
+          for delta in deltas.clone().iter() {
+            let new_numeric = numeric as i8 + delta * depth;
+
+            if new_numeric < 0 || new_numeric > 63 {
+              continue
+            }
+
+            let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+
+            if new_coord.is_valid().is_ok()
+              && (new_coord.row as i8 - coordinate.row as i8).abs()
+                == (new_coord.col as i8 - coordinate.col as i8).abs()
+            {
+              let on_way_piece = self.get_piece(&new_coord);
+
+              if on_way_piece.is_none() {
+                moves.push(new_coord);
+              } else {
+                if on_way_piece.unwrap().color != piece.color {
+                  moves.push(new_coord);
+                }
+
+                deltas.retain(|&x| x != *delta);
+              }
+            }
+          }
+        }
+      },
+      Knight => {
+        let mut deltas = vec![-17, -15, -10, -6, 6, 10, 15, 17];
+
+        for delta in deltas.clone().iter() {
+          let new_numeric = numeric as i8 + delta;
+
+          if new_numeric < 0 || new_numeric > 63 {
+            continue
+          }
+
+          let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+
+          if new_coord.is_valid().is_ok()
+            && (new_coord.row as i8 - coordinate.row as i8).abs() <= 2
+            && (new_coord.col as i8 - coordinate.col as i8).abs() <= 2
+          {
+            let on_way_piece = self.get_piece(&new_coord);
+
+            if on_way_piece.is_none() {
+              moves.push(new_coord);
+            } else {
+              if on_way_piece.unwrap().color != piece.color {
+                moves.push(new_coord);
+              }
+
+              deltas.retain(|&x| x != *delta);
+            }
+          }
+        }
+      },
+      Pawn => {
+        let increment = if piece.color == Color::White { -1 } else { 1 };
+        let starting_row = if piece.color == Color::White { 6 } else { 1 };
+
+        let new_coord = coord!((coordinate.row as i8 + increment) as u8, coordinate.col);
+
+        // Just straight moves
+        if new_coord.is_valid().is_ok() {
+          let on_way_piece = self.get_piece(&new_coord);
+
+          if on_way_piece.is_none() {
+            moves.push(new_coord);
+
+            if coordinate.row == starting_row {
+              let new_coord = coord!((new_coord.row as i8 + increment) as u8, new_coord.col);
+
+              if new_coord.is_valid().is_ok() {
+                let on_way_piece = self.get_piece(&new_coord);
+
+                if on_way_piece.is_none() {
+                  moves.push(new_coord);
+                }
+              }
+            }
+          }
+        }
+
+        // Attacking moves
+        let move1 = coord!((coordinate.row as i8 + increment) as u8, coordinate.col - 1);
+        let move2 = coord!((coordinate.row as i8 + increment) as u8, coordinate.col + 1);
+
+        if move1.is_valid().is_ok() {
+          let on_way_piece = self.get_piece(&move1);
+
+          if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
+            moves.push(move1);
+          }
+
+          if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move1 {
+            moves.push(move1);
+          }
+        }
+
+        if move2.is_valid().is_ok() {
+          let on_way_piece = self.get_piece(&move2);
+
+          if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
+            moves.push(move2);
+          }
+
+          if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move2 {
+            moves.push(move2);
+          }
+        }
+      }
+    }
+
+    return moves
+  }
+
+  pub fn move_piece(
+    &mut self,
+    start: Coordinate,
+    target: Coordinate
+  ) -> Result<Option<Piece>, String> {
+    let start_piece = self.get_piece(&start);
+
+    if start_piece.is_none() {
+      return Err(String::from("Trying to move empty square"))
+    }
+
+    let old_piece = self.get_piece(&target);
+
+    if old_piece.is_some() && old_piece.unwrap().color == start_piece.unwrap().color {
+      return Err(String::from(
+        "Trying to move to square with same color piece"
+      ))
+    }
+
+    self.place_piece(start_piece.unwrap(), target);
+
+    // Remove start piece from hashmap
+    self.pieces.remove(&start);
+
+    // TODO: En passant
+    // TODO: Castling
+    // TODO: Promotion
+
+    // Incrementing clocks
+    self.halfmove_clock += 1;
+    if self.turn == Color::Black {
+      self.fullmove_number += 1;
+    }
+
+    // Switching turn
+    self.turn = if self.turn == Color::White {
+      Color::Black
+    } else {
+      Color::White
     };
 
-    // Invert a turn
-    use Color::*;
-    self.turn = match self.turn {
-      White => Black,
-      Black => White,
-    };
+    return Ok(old_piece)
+  }
 
-    return captured_piece;
+  pub fn generate_moves(
+    &self,
+    coord: Coordinate
+  ) -> Vec<Coordinate> {
+    // Get pseudo-legal moves and filter out moves that would put the king in check
+    let mut moves = self.generate_pseudo_legal_moves(coord);
+
+    moves.retain(|&x| {
+      let mut new_board = self.clone();
+      new_board.move_piece(coord, x).unwrap();
+
+      return !new_board.is_in_check(self.turn)
+    });
+
+    return moves
   }
 
   pub fn get_king_coord(
     &self,
-    color: Color,
+    color: Color
   ) -> Option<Coordinate> {
-    for (coord, piece) in match color {
-      Color::White => &self.white_pieces,
-      Color::Black => &self.black_pieces,
-    }
-    .iter()
-    {
-      if piece.breed == Pieces::King {
-        return Some(*coord);
+    for (coord, piece) in &self.pieces {
+      if piece.breed == Pieces::King && piece.color == color {
+        return Some(coord.clone())
       }
     }
 
-    return None;
-  }
-
-  pub fn get_piece(
-    &self,
-    coord: Coordinate,
-  ) -> Option<Piece> {
-    // It returns None if the piece you are trying to get is empty, so there is no need to
-    // check for a piece breed all the time if you can just check for None =D
-
-    // Checking if the coordinate is valid
-    if (coord.row >= 0 && coord.col >= 0) && (coord.row < 8 && coord.col < 8) {
-      let piece = self.board[coord.row as usize][coord.col as usize];
-
-      return match piece.breed {
-        Pieces::Empty => None,
-        _ => Some(piece),
-      };
-    }
-
-    return None;
-  }
-
-  pub fn filter_check_moves(
-    &self,
-    moves: &mut Vec<Coordinate>,
-    coord: Coordinate,
-  ) {
-    let piece = self.get_piece(coord).unwrap();
-    let mut board_copy = Box::new(self.clone());
-
-    // If the piece is king, you have to check all the moves
-    // If the piece is not a king, it is enough to check only one move
-
-    match piece.breed {
-      Pieces::King => {
-        let mut index = 0;
-
-        while index < moves.len() {
-          let move_coord = moves[index];
-
-          let captured = board_copy.apply_move(coord, move_coord);
-
-          if board_copy.is_in_check(piece.color) {
-            moves.remove(index);
-          } else {
-            index += 1;
-          }
-
-          // Undo the move
-          board_copy.apply_move(move_coord, coord);
-
-          if captured.is_some() {
-            board_copy.place_piece(captured.unwrap(), move_coord);
-          }
-        }
-      },
-      _ => {
-        let move_coord = moves[0];
-
-        board_copy.apply_move(coord, move_coord);
-
-        if board_copy.is_in_check(piece.color) {
-          moves.clear();
-        }
-      },
-    }
-  }
-
-  pub fn get_moves(
-    &self,
-    coord: Coordinate,
-  ) -> Vec<Coordinate> {
-    let piece = self.get_piece(coord);
-
-    return match piece {
-      Some(piece) => {
-        // Get default moves for the piece
-        // Filter coordinates that hit friendly pieces
-        // Create a copy of the board
-        // Apply the move to the copy
-        // Check if friendly king is in check
-        // If it is, remove the move from the list
-
-        let mut moves = Vec::new();
-
-        use Pieces::*;
-        match piece.breed {
-          King => {
-            let mut check_coord = |diff: i8| {
-              let new_coord = Coordinate::from_number(coord.as_number() + diff);
-
-              // Checking if new coorddinate is in the board
-              if (new_coord.row >= 0 && new_coord.row <= 7)
-                && (new_coord.col >= 0 && new_coord.col <= 7)
-                && (new_coord.row - coord.row).abs() < 2
-                && (new_coord.col - coord.col).abs() < 2
-              {
-                let on_way_piece = self.get_piece(new_coord);
-
-                if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color
-                // You hit an enemy piece
-                {
-                  moves.push(new_coord);
-                }
-              }
-            };
-
-            check_coord(1);
-            check_coord(-1);
-            check_coord(8);
-            check_coord(-8);
-            check_coord(9);
-            check_coord(-9);
-            check_coord(7);
-            check_coord(-7);
-
-            // Iterate over moves, apply them to the copy of the board
-            // and check if the king is in check
-
-            self.filter_check_moves(&mut moves, coord);
-
-            // TODO: Castling
-          },
-
-          Queen => {
-            moves.append(&mut self.get_diagonal_moves(coord, piece.color));
-            moves.append(&mut self.get_linear_moves(coord, piece.color));
-
-            self.filter_check_moves(&mut moves, coord);
-          },
-
-          Rook => {
-            moves.append(&mut self.get_linear_moves(coord, piece.color));
-
-            self.filter_check_moves(&mut moves, coord);
-          },
-
-          Bishop => {
-            moves.append(&mut self.get_diagonal_moves(coord, piece.color));
-
-            self.filter_check_moves(&mut moves, coord);
-          },
-
-          Knight => {
-            let mut check_coord = |diff: i8| {
-              let new_coord = Coordinate::from_number(coord.as_number() + diff);
-
-              // Checking if new coorddinate is in the board
-              if (new_coord.row >= 0 && new_coord.row <= 7)
-                && (new_coord.col >= 0 && new_coord.col <= 7)
-                && (new_coord.row - coord.row).abs() < 3
-                && (new_coord.col - coord.col).abs() < 3
-              {
-                let on_way_piece = self.get_piece(new_coord);
-
-                if on_way_piece.is_none() || on_way_piece.unwrap().color != piece.color
-                // You hit an enemy piece
-                {
-                  moves.push(new_coord);
-                }
-              }
-            };
-
-            check_coord(10);
-            check_coord(-6);
-            check_coord(17);
-            check_coord(-15);
-            check_coord(15);
-            check_coord(-17);
-            check_coord(6);
-            check_coord(-10);
-
-            self.filter_check_moves(&mut moves, coord);
-          },
-
-          Pawn => {
-            let starting_row = if piece.color == Color::White { 6 } else { 1 };
-            let inc = if piece.color == Color::White { 1 } else { -1 };
-
-            // Checking the sqaure in front of the pawn
-            if self
-              .get_piece(Coordinate::from_number(coord.as_number() + inc * 8))
-              .is_none()
-            {
-              moves.push(Coordinate::from_number(coord.as_number() + inc * 8));
-
-              // Checking if the pawn is in the starting row
-              if coord.row == starting_row {
-                // If the second square in front of the pawn is empty, add a move
-                if self
-                  .get_piece(Coordinate::from_number(coord.as_number() + inc * 16))
-                  .is_none()
-                {
-                  moves.push(Coordinate::from_number(coord.as_number() + inc * 16));
-                }
-              }
-            }
-
-            // Attacking moves
-            match self.get_piece(Coordinate::from_number(coord.as_number() + inc * 7)) {
-              Some(under_attack_piece) => {
-                if under_attack_piece.color != piece.color {
-                  moves.push(Coordinate::from_number(coord.as_number() + inc * 7));
-                }
-              },
-              None => {},
-            }
-
-            match self.get_piece(Coordinate::from_number(coord.as_number() + inc * 9)) {
-              Some(under_attack_piece) => {
-                if under_attack_piece.color != piece.color {
-                  moves.push(Coordinate::from_number(coord.as_number() + inc * 9));
-                }
-              },
-              None => {},
-            }
-
-            // En passant
-            match self.en_passant_target_sq {
-              Some(en_passant_target_sq) => {
-                if Coordinate::from_number(coord.as_number() + inc * 7) == en_passant_target_sq {
-                  moves.push(Coordinate::from_number(coord.as_number() + inc * 7));
-                }
-
-                if Coordinate::from_number(coord.as_number() + inc * 9) == en_passant_target_sq {
-                  moves.push(Coordinate::from_number(coord.as_number() + inc * 9));
-                }
-              },
-              None => {},
-            }
-          },
-
-          Empty => {},
-        };
-
-        moves
-      },
-      None => Vec::new(),
-    };
+    return None
   }
 
   pub fn is_in_check(
     &self,
-    color: Color,
+    color: Color
   ) -> bool {
-    let king_coord: Option<Coordinate> = self.get_king_coord(color);
+    let king_coord = self.get_king_coord(color);
 
     if king_coord.is_none() {
-      // No king found on the board
-      return false;
+      // No king - no check
+      return false
     }
 
-    for (coord, _) in match color {
-      Color::White => self.black_pieces.iter(),
-      Color::Black => self.white_pieces.iter(),
-    } {
-      if self.get_moves(*coord).contains(&king_coord.unwrap()) {
-        return true;
+    let king_coord = king_coord.unwrap();
+
+    for (coord, piece) in &self.pieces {
+      if piece.color != color {
+        let moves = self.generate_pseudo_legal_moves(*coord);
+
+        if moves.contains(&king_coord) {
+          return true
+        }
       }
     }
 
-    return false;
+    return false
   }
 
+  #[allow(unused)]
   pub fn is_in_checkmate(
-    &mut self,
-    color: Color,
+    &self,
+    color: Color
   ) -> bool {
-    // Get king coordinate
-    let king_coord: Option<Coordinate> = self.get_king_coord(color);
-
-    if king_coord.is_none() {
-      // No king found on the board
-      return false;
-    }
-
-    // If king not in the check, return false
-    if !self.is_in_check(color) {
-      return false;
-    }
-
-    // If king can move, return false
-    if self.get_moves(king_coord.unwrap()).len() > 0 {
-      return false;
-    }
-
-    // If any piece can block the check, return false
-    for (coord, _) in match color {
-      Color::White => self.white_pieces.iter(),
-      Color::Black => self.black_pieces.iter(),
-    } {
-      // Get moves for each coordinate, if length > 0, return false
-      if self.get_moves(*coord).len() > 0 {
-        return false;
-      }
-    }
-
-    return true;
+    // NOT IMPLEMENTED
+    return false
   }
 }
