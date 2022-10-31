@@ -721,9 +721,32 @@ impl Board {
     // Remove start piece from hashmap
     self.pieces.remove(&start);
 
-    // TODO: En passant
+    // Update en passant target square
+    if start_piece.unwrap().breed == Pieces::Pawn {
+        if (start.row as i8 - target.row as i8).abs() == 2 {
+            let increment = if start_piece.unwrap().color == Color::White { -1 } else { 1 };
+            self.en_passant_target_sq = Some(coord!((target.row as i8 + increment) as u8, target.col));
+        } else {
+          self.en_passant_target_sq = None;
+        }
+    } else {
+      self.en_passant_target_sq = None;
+    }
+
     // TODO: Castling
-    // TODO: Promotion
+
+    // Promotion
+    if start_piece.unwrap().breed == Pieces::Pawn {
+        let promotion_row = if start_piece.unwrap().color == Color::White { 0 } else { 7 };
+
+        if target.row == promotion_row {
+            let queen = Piece {
+                color: start_piece.unwrap().color,
+                breed: Pieces::Queen
+            };
+            self.place_piece(queen, target);
+        }
+    }
 
     // Incrementing clocks
     self.halfmove_clock += 1;
