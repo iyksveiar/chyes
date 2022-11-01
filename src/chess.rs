@@ -656,40 +656,44 @@ impl Board {
         let move1_numeric = coordinate.row as i8 + increment;
         let move2_numeric = coordinate.row as i8 + increment;
 
-        if move1_numeric >= 0 && move1_numeric <= 63 &&
-           coordinate.col as i8 - 1 >= 0 && coordinate.col as i8 - 1 <= 7
+        if move1_numeric >= 0
+          && move1_numeric <= 63
+          && coordinate.col as i8 - 1 >= 0
+          && coordinate.col as i8 - 1 <= 7
         {
-            let move1 = coord!(move1_numeric as u8, coordinate.col - 1);
+          let move1 = coord!(move1_numeric as u8, coordinate.col - 1);
 
-            if move1.is_valid().is_ok() {
-              let on_way_piece = self.get_piece(&move1);
+          if move1.is_valid().is_ok() {
+            let on_way_piece = self.get_piece(&move1);
 
-              if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
-                moves.push(move1);
-              }
-
-              if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move1 {
-                moves.push(move1);
-              }
+            if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
+              moves.push(move1);
             }
+
+            if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move1 {
+              moves.push(move1);
+            }
+          }
         }
 
-        if move2_numeric >= 0 && move2_numeric <= 63 &&
-           coordinate.col as i8 + 1 >= 0 && coordinate.col as i8 + 1 <= 7
+        if move2_numeric >= 0
+          && move2_numeric <= 63
+          && coordinate.col as i8 + 1 >= 0
+          && coordinate.col as i8 + 1 <= 7
         {
-            let move2 = coord!(move2_numeric as u8, coordinate.col + 1);
+          let move2 = coord!(move2_numeric as u8, coordinate.col + 1);
 
-            if move2.is_valid().is_ok() {
-              let on_way_piece = self.get_piece(&move2);
+          if move2.is_valid().is_ok() {
+            let on_way_piece = self.get_piece(&move2);
 
-              if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
-                moves.push(move2);
-              }
-
-              if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move2 {
-                moves.push(move2);
-              }
+            if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
+              moves.push(move2);
             }
+
+            if self.en_passant_target_sq.is_some() && self.en_passant_target_sq.unwrap() == move2 {
+              moves.push(move2);
+            }
+          }
         }
       }
     }
@@ -723,12 +727,16 @@ impl Board {
 
     // Update en passant target square
     if start_piece.unwrap().breed == Pieces::Pawn {
-        if (start.row as i8 - target.row as i8).abs() == 2 {
-            let increment = if start_piece.unwrap().color == Color::White { -1 } else { 1 };
-            self.en_passant_target_sq = Some(coord!((target.row as i8 + increment) as u8, target.col));
+      if (start.row as i8 - target.row as i8).abs() == 2 {
+        let increment = if start_piece.unwrap().color == Color::White {
+          -1
         } else {
-          self.en_passant_target_sq = None;
-        }
+          1
+        };
+        self.en_passant_target_sq = Some(coord!((target.row as i8 + increment) as u8, target.col));
+      } else {
+        self.en_passant_target_sq = None;
+      }
     } else {
       self.en_passant_target_sq = None;
     }
@@ -737,15 +745,19 @@ impl Board {
 
     // Promotion
     if start_piece.unwrap().breed == Pieces::Pawn {
-        let promotion_row = if start_piece.unwrap().color == Color::White { 0 } else { 7 };
+      let promotion_row = if start_piece.unwrap().color == Color::White {
+        0
+      } else {
+        7
+      };
 
-        if target.row == promotion_row {
-            let queen = Piece {
-                color: start_piece.unwrap().color,
-                breed: Pieces::Queen
-            };
-            self.place_piece(queen, target);
-        }
+      if target.row == promotion_row {
+        let queen = Piece {
+          color: start_piece.unwrap().color,
+          breed: Pieces::Queen
+        };
+        self.place_piece(queen, target);
+      }
     }
 
     // Incrementing clocks
@@ -770,12 +782,13 @@ impl Board {
   ) -> Vec<Coordinate> {
     // Get pseudo-legal moves and filter out moves that would put the king in check
     let mut moves = self.generate_pseudo_legal_moves(coord);
+    let color = self.get_piece(&coord).unwrap().color;
 
     moves.retain(|&x| {
       let mut new_board = self.clone();
       new_board.move_piece(coord, x).unwrap();
 
-      return !new_board.is_in_check(self.turn)
+      return !new_board.is_in_check(color)
     });
 
     return moves
@@ -805,13 +818,11 @@ impl Board {
       return false
     }
 
-    let king_coord = king_coord.unwrap();
-
     for (coord, piece) in &self.pieces {
-      if piece.color != color {
+      if piece.color != color && piece.breed != Pieces::King {
         let moves = self.generate_pseudo_legal_moves(*coord);
 
-        if moves.contains(&king_coord) {
+        if moves.contains(&king_coord.unwrap()) {
           return true
         }
       }
@@ -825,7 +836,20 @@ impl Board {
     &self,
     color: Color
   ) -> bool {
-    // NOT IMPLEMENTED
-    return false
+    if self.get_king_coord(color).is_none() {
+      return false
+    }
+
+    for (coord, piece) in &self.pieces {
+      if piece.color == color && piece.breed != Pieces::King {
+        let moves = self.generate_moves(*coord);
+
+        if moves.len() > 0 {
+          return false
+        }
+      }
+    }
+
+    return true
   }
 }
