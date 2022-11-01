@@ -862,22 +862,11 @@ mod tests {
     assert_eq!(board.generate_moves(coord!(4, 2)).len(), 1);
   }
 
-  // NOTE: Not implemented filtering of moves that lead to check, no sense to run it =D
   #[test]
-  #[ignore]
   fn is_checkmate() {
     let mut board = Board::new();
 
     // Case 1: Double rook mate
-    /*
-       K . r
-       . . r
-       . . .
-
-       true
-    */
-
-    println!("Double rook mate");
     board
       .load_fen(String::from("K6r/7r/8/8/8/8/8/8 w - - 0 1"))
       .expect("Failed to load FEN");
@@ -885,30 +874,47 @@ mod tests {
     board.reset();
 
     // Case 2: Anderssen's mate
-    /*
-      . k R
-      . P .
-      K . .
-    */
-
-    println!("Anderssen's mate");
-    board.place_piece(piece!(King, Black), coord!(0, 6));
-    board.place_piece(piece!(Rook, White), coord!(0, 7));
-    board.place_piece(piece!(Pawn, White), coord!(1, 6));
-    board.place_piece(piece!(King, White), coord!(2, 5));
+    board
+      .load_fen(String::from("6kR/6P1/5K2/8/8/8/8/8 w - - 0 1"))
+      .expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::Black), true);
     board.reset();
 
     // Case 3: Arabian mate
-
-    println!("Arabian mate");
     board
       .load_fen(String::from("7k/7R/5N2/8/8/8/8/8 w - - 0 1"))
       .expect("Failed to load FEN");
+    assert_eq!(board.is_in_checkmate(Color::Black), true);
     board.reset();
 
+    // Case 4: Backrank mate
+    board
+      .load_fen(String::from("3R2k1/5ppp/8/8/8/8/8/8 w - - 0 1"))
+      .expect("Failed to load FEN");
+    assert_eq!(board.is_in_checkmate(Color::Black), true);
+    board.reset();
+
+    // Case 4: Balestra mate
+    board
+      .load_fen(String::from("6k1/8/4B2Q/8/8/8/8/8 w - - 0 1"))
+      .expect("Failed to load FEN");
+    assert_eq!(board.is_in_checkmate(Color::Black), true);
+    board.reset();
+
+    // Case 5: Bishop and knight mate
+    board
+      .load_fen(String::from("7k/8/5BKN/8/8/8/8/8 w - - 0 1"))
+      .expect("Failed to load FEN");
+    assert_eq!(board.is_in_checkmate(Color::Black), true);
+    board.reset();
+
+    // Case 6: Blackburne's mate
+    board
+      .load_fen(String::from("5rk1/7B/8/6N1/8/8/1B6/8 w - - 0 1"))
+      .expect("Failed to load FEN");
+    assert_eq!(board.is_in_checkmate(Color::Black), true);
+
     // Case N: Not a mate
-    println!("Not a mate");
     board
       .load_fen(String::from("K6r/7r/6N1/8/8/8/8/8 w - - 0 1"))
       .expect("Failed to load FEN");
