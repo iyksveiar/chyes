@@ -142,7 +142,6 @@ pub struct Board {
   pub fullmove_number:      u16
 }
 
-#[allow(dead_code)]
 impl Board {
   pub fn default() -> Self {
     let mut result = Board::new();
