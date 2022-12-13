@@ -2,6 +2,7 @@ mod chess;
 use chess::*;
 
 // Macro to expand coord!(x, y) to Coordinate { row: x, col: y }
+#[allow(unused_macros)]
 macro_rules! coord {
   ($x:expr, $y:expr) => {
     Coordinate {
@@ -11,6 +12,7 @@ macro_rules! coord {
 }
 
 // Macro to expand piece!(piece, color) to Piece { breed: Pieces::piece, color: Color::color }
+#[allow(unused_macros)]
 macro_rules! piece {
   ($piece:ident, $color:ident) => {
     Piece {

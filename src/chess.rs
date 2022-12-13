@@ -15,6 +15,7 @@ macro_rules! coord {
 }
 
 // piece!(King, Black) -> Piece { breed: Pieces::King, color: Color::Black }
+#[allow(unused_macros)]
 macro_rules! piece {
   ($piece:ident, $color:ident) => {
     Piece {
@@ -31,6 +32,7 @@ pub struct Coordinate {
   pub col: u8
 }
 
+#[allow(dead_code)]
 impl Coordinate {
   // We assume that the coordinate is valid, when we transform or use it
   // Except when we need to construct a new coordinate
@@ -142,6 +144,7 @@ pub struct Board {
   pub fullmove_number:      u16
 }
 
+#[allow(dead_code)]
 impl Board {
   pub fn default() -> Self {
     let mut result = Board::new();
