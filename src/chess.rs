@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 // Sequence: King, Queen, Rook, Bishop, Knight, Pawn
 // NOTE: Might be changable in the future, via a command line argument
-const BLACK_PIECES: [&str; 6] = ["♔", "♕", "♖", "♗", "♘", "♙"];
-const WHITE_PIECES: [&str; 6] = ["♚", "♛", "♜", "♝", "♞", "♟"];
+pub const BLACK_PIECES: [&str; 6] = ["♔", "♕", "♖", "♗", "♘", "♙"];
+pub const WHITE_PIECES: [&str; 6] = ["♚", "♛", "♜", "♝", "♞", "♟"];
 
 // Macro to expand coord!(x, y) to Coordinate { row: x, col: y }
 macro_rules! coord {
