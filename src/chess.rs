@@ -113,6 +113,12 @@ impl Coordinate {
 }
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Color {
+  Black,
+  White
+}
+
+#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Pieces {
   King,
   Queen,
@@ -122,10 +128,15 @@ pub enum Pieces {
   Pawn
 }
 
-#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Color {
-  Black,
-  White
+impl Pieces {
+    // TODO: Probably I have to add Empty as new enum element, so I could use beautiful black or white squares
+    pub fn to_unicode(&self, color: Color) -> char {
+        // Convert a piece to a unicode character
+        match color {
+            Color::Black => BLACK_PIECES[*self as usize].chars().nth(0).unwrap(),
+            Color::White => WHITE_PIECES[*self as usize].chars().nth(0).unwrap()
+        }
+    }
 }
 
 #[derive(Hash, Clone, Copy, Debug)]
@@ -402,23 +413,7 @@ impl Board {
 
         match piece {
           Some(piece) => {
-            let pieces_str: &[&str; 6] = match piece.color {
-              Color::White => &WHITE_PIECES,
-              Color::Black => &BLACK_PIECES
-            };
-
-            use Pieces::*;
-            print!(
-              "{} ",
-              match piece.breed {
-                King => pieces_str[0],
-                Queen => pieces_str[1],
-                Rook => pieces_str[2],
-                Bishop => pieces_str[3],
-                Knight => pieces_str[4],
-                Pawn => pieces_str[5]
-              }
-            );
+              print!("{} ", piece.breed.to_unicode(piece.color));
           },
           None => print!(". ")
         }
