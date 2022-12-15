@@ -1,6 +1,7 @@
 #[path="./chess.rs"]
 mod chess;
 
+#[allow(unused_macros)]
 macro_rules! piece {
   ($piece:ident, $color:ident) => {
     chess::Piece {
