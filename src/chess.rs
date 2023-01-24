@@ -114,8 +114,8 @@ impl Coordinate {
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Color {
-  Black,
-  White
+  Black = 0,
+  White = 1
 }
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
@@ -206,34 +206,36 @@ impl Board {
     let halfmove_clock = fen_parts.next().ok_or(())?;
     let fullmove_number = fen_parts.next().ok_or(())?;
 
-    self.reset();
+    self.reset(); // New FEN, new board
 
     // Piece placement
-    let mut row = 0;
-    let mut col = 0;
+    let mut row: u8 = 0;
+    let mut col: u8 = 0;
 
     for c in piece_placement.chars() {
       if c == '/' {
         row += 1;
         col = 0;
       } else if c.is_digit(10) {
-        col += c.to_digit(10).unwrap() as u8;
+        col += /* c.to_digit */ c.to_digit(10).unwrap() as u8;
       } else {
         let color = match c.is_uppercase() {
           true => Color::White,
           false => Color::Black
         };
 
+        use Pieces::*;
         let piece = match c.to_ascii_lowercase() {
-          'k' => Pieces::King,
-          'q' => Pieces::Queen,
-          'r' => Pieces::Rook,
-          'b' => Pieces::Bishop,
-          'n' => Pieces::Knight,
-          'p' => Pieces::Pawn,
-          _ => return Err(())
+          'k' => King,
+          'q' => Queen,
+          'r' => Rook,
+          'b' => Bishop,
+          'n' => Knight,
+          'p' => Pawn,
+          _ => return Err(()) // Invalid piece
         };
 
+        // Add the piece to the board and increment the column
         self.pieces.insert(
           coord!(row, col),
           Piece {
@@ -287,26 +289,27 @@ impl Board {
 
     // Piece placement
     for row in 0..8 {
-      let mut empty_squares = 0;
+      let mut empty_squares_count = 0;
 
       for col in 0..8 {
         let coord = coord!(row, col);
 
         if self.pieces.contains_key(&coord) {
-          if empty_squares > 0 {
-            fen.push_str(&empty_squares.to_string());
-            empty_squares = 0;
+          if empty_squares_count > 0 {
+            fen.push_str(&empty_squares_count.to_string());
+            empty_squares_count = 0;
           }
 
           let piece = self.pieces.get(&coord).unwrap();
 
+          use Pieces::*;
           let c = match piece.breed {
-            Pieces::King => 'K',
-            Pieces::Queen => 'Q',
-            Pieces::Rook => 'R',
-            Pieces::Bishop => 'B',
-            Pieces::Knight => 'N',
-            Pieces::Pawn => 'P'
+            King => 'K',
+            Queen => 'Q',
+            Rook => 'R',
+            Bishop => 'B',
+            Knight => 'N',
+            Pawn => 'P'
           };
 
           fen.push(match piece.color {
@@ -314,16 +317,16 @@ impl Board {
             Color::Black => c.to_ascii_lowercase()
           });
         } else {
-          empty_squares += 1;
+          empty_squares_count += 1;
         }
       }
 
-      if empty_squares > 0 {
-        fen.push_str(&empty_squares.to_string());
+      if empty_squares_count > 0 {
+        fen.push_str(/* empty_squares_count.to_digit() */ &empty_squares_count.to_string());
       }
 
       if row < 7 {
-        fen.push('/');
+        fen.push('/'); // New row
       }
     }
 
@@ -726,7 +729,7 @@ impl Board {
     self.pieces.remove(&start);
 
     // Update en passant target square
-    if start_piece.unwrap().breed == Pieces::Pawn {
+    if /* piece is a pawn */ start_piece.unwrap().breed == Pieces::Pawn {
       if (start.row as i8 - target.row as i8).abs() == 2 {
         let increment = if start_piece.unwrap().color == Color::White {
           -1
