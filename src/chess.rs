@@ -129,14 +129,17 @@ pub enum Pieces {
 }
 
 impl Pieces {
-    // TODO: Probably I have to add Empty as new enum element, so I could use beautiful black or white squares
-    pub fn to_unicode(&self, color: Color) -> char {
-        // Convert a piece to a unicode character
-        match color {
-            Color::Black => BLACK_PIECES[*self as usize].chars().nth(0).unwrap(),
-            Color::White => WHITE_PIECES[*self as usize].chars().nth(0).unwrap()
-        }
+  // TODO: Probably I have to add Empty as new enum element, so I could use beautiful black or white squares
+  pub fn to_unicode(
+    &self,
+    color: Color
+  ) -> char {
+    // Convert a piece to a unicode character
+    match color {
+      Color::Black => BLACK_PIECES[*self as usize].chars().nth(0).unwrap(),
+      Color::White => WHITE_PIECES[*self as usize].chars().nth(0).unwrap()
     }
+  }
 }
 
 #[derive(Hash, Clone, Copy, Debug)]
@@ -413,7 +416,7 @@ impl Board {
 
         match piece {
           Some(piece) => {
-              print!("{} ", piece.breed.to_unicode(piece.color));
+            print!("{} ", piece.breed.to_unicode(piece.color));
           },
           None => print!(". ")
         }
