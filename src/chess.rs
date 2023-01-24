@@ -183,9 +183,9 @@ impl Board {
       en_passant_target_sq: None,
 
       // Set castling to true for both sides
-      castling:             [[true; 2]; 2],
-      halfmove_clock:       0,
-      fullmove_number:      1
+      castling:        [[true; 2]; 2],
+      halfmove_clock:  0,
+      fullmove_number: 1
     }
   }
 
@@ -330,7 +330,9 @@ impl Board {
       }
 
       if empty_squares_count > 0 {
-        fen.push_str(/* empty_squares_count.to_digit() */ &empty_squares_count.to_string());
+        fen.push_str(
+          /* empty_squares_count.to_digit() */ &empty_squares_count.to_string()
+        );
       }
 
       if row < 7 {
@@ -737,7 +739,9 @@ impl Board {
     self.pieces.remove(&start);
 
     // Update en passant target square
-    if /* piece is a pawn */ start_piece.unwrap().breed == Pieces::Pawn {
+    if
+    /* piece is a pawn */
+    start_piece.unwrap().breed == Pieces::Pawn {
       if (start.row as i8 - target.row as i8).abs() == 2 {
         let increment = if start_piece.unwrap().color == Color::White {
           -1
