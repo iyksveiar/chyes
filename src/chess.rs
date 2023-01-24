@@ -752,7 +752,34 @@ impl Board {
       self.en_passant_target_sq = None;
     }
 
-    // TODO: Castling
+    // Update castling rights
+    // If the king has moved
+    if start_piece.unwrap().breed == Pieces::King {
+      if start_piece.unwrap().color == Color::White {
+        self.castling[Color::White as usize][CastlingSides::KingSide as usize] = false;
+        self.castling[Color::White as usize][CastlingSides::QueenSide as usize] = false;
+      } else {
+        self.castling[Color::Black as usize][CastlingSides::KingSide as usize] = false;
+        self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] = false;
+      }
+    }
+
+    // Checking if rook has moved
+    if start_piece.unwrap().breed == Pieces::Rook {
+      if start_piece.unwrap().color == Color::White {
+        if start == coord!(7, 0) {
+          self.castling[Color::White as usize][CastlingSides::QueenSide as usize] = false;
+        } else if start == coord!(7, 7) {
+          self.castling[Color::White as usize][CastlingSides::KingSide as usize] = false;
+        }
+      } else {
+        if start == coord!(0, 0) {
+          self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] = false;
+        } else if start == coord!(0, 7) {
+          self.castling[Color::Black as usize][CastlingSides::KingSide as usize] = false;
+        }
+      }
+    }
 
     // Promotion
     if start_piece.unwrap().breed == Pieces::Pawn {
