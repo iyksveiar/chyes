@@ -148,12 +148,18 @@ pub struct Piece {
   pub color: Color
 }
 
+#[derive(Hash, Eq, PartialEq, Copy, Clone)]
+enum CastlingSides {
+  KingSide = 0,
+  QueenSide = 1
+}
+
 #[derive(Clone)]
 pub struct Board {
   pub turn:                 Color,
   pub pieces:               HashMap<Coordinate, Piece>,
   pub en_passant_target_sq: Option<Coordinate>,
-  pub castling:             [bool; 4], // [Black King, Black Queen, White King, White Queen]
+  pub castling:             [[bool; 2]; 2], // [color][side]
   pub halfmove_clock:       u16,
   pub fullmove_number:      u16
 }
@@ -175,7 +181,9 @@ impl Board {
       turn:                 Color::White,
       pieces:               HashMap::new(),
       en_passant_target_sq: None,
-      castling:             [true, true, true, true],
+
+      // Set castling to true for both sides
+      castling:             [[true; 2]; 2],
       halfmove_clock:       0,
       fullmove_number:      1
     }
@@ -185,7 +193,7 @@ impl Board {
     self.turn = Color::White;
     self.pieces.clear();
     self.en_passant_target_sq = None;
-    self.castling = [true, true, true, true];
+    self.castling = [[true; 2]; 2];
     self.halfmove_clock = 0;
     self.fullmove_number = 1;
   }
@@ -257,10 +265,10 @@ impl Board {
     // Castling availability
     for c in castling_availability.chars() {
       match c {
-        'K' => self.castling[2] = true,
-        'Q' => self.castling[3] = true,
-        'k' => self.castling[0] = true,
-        'q' => self.castling[1] = true,
+        'K' => self.castling[Color::White as usize][CastlingSides::KingSide as usize] = true,
+        'Q' => self.castling[Color::White as usize][CastlingSides::QueenSide as usize] = true,
+        'k' => self.castling[Color::Black as usize][CastlingSides::KingSide as usize] = true,
+        'q' => self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] = true,
         '-' => (),
         _ => return Err(())
       }
@@ -341,22 +349,22 @@ impl Board {
     fen.push(' ');
 
     // Castling availability
-    if self.castling.iter().all(|&x| !x) {
+    if self.castling.iter().all(|x| x.is_empty()) {
       fen.push('-');
     } else {
-      if self.castling[2] {
+      if self.castling[Color::White as usize][CastlingSides::KingSide as usize] {
         fen.push('K');
       }
 
-      if self.castling[3] {
+      if self.castling[Color::White as usize][CastlingSides::QueenSide as usize] {
         fen.push('Q');
       }
 
-      if self.castling[0] {
+      if self.castling[Color::Black as usize][CastlingSides::KingSide as usize] {
         fen.push('k');
       }
 
-      if self.castling[1] {
+      if self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] {
         fen.push('q');
       }
     }
