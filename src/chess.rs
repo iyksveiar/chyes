@@ -52,13 +52,13 @@ impl Coordinate {
     return notation
   }
 
-  pub fn from_notation(notation: String) -> Result<Self, ()> {
+  pub fn from_notation(notation: String) -> Result<Self, String> {
     // a8 -> (0, 0)
     // h1 -> (7, 7)
 
     // Check if the notation is valid
     if notation.len() != 2 {
-      return Err(())
+      return Err(format!("Couldn't parse notation: {}", notation))
     }
 
     // Get the column
@@ -69,7 +69,7 @@ impl Coordinate {
 
     // Check if the column and row are valid
     if col > 7 || row > 7 {
-      return Err(())
+      return Err(format!("Provided notation is out of bounds: {}", notation))
     }
 
     return Ok(coord!(row, col))
@@ -91,19 +91,19 @@ impl Coordinate {
     return self.row * 8 + self.col
   }
 
-  pub fn from_number(number: u8) -> Result<Self, ()> {
+  pub fn from_number(number: u8) -> Result<Self, String> {
     // Converts a number to a coordinate
     if number > 63 {
-      return Err(())
+      return Err(format!("Provided number is out of 00-63 bounds: {}", number))
     }
 
     return Ok(coord!(number / 8, number % 8))
   }
 
-  pub fn is_valid(&self) -> Result<(), ()> {
+  pub fn is_valid(&self) -> Result<(), String> {
     // Check if the coordinate is valid
     if self.row > 7 || self.col > 7 {
-      return Err(())
+      return Err("Invalid coordinate".to_string())
     }
 
     return Ok(())
@@ -198,18 +198,18 @@ impl Board {
   pub fn load_fen(
     &mut self,
     fen: String
-  ) -> Result<(), ()> {
+  ) -> Result<(), String> {
     // Source: https://en.wikipedia.org/wiki/forsyth%e2%80%93edwards_notation
 
     // Splitting the FEN string into 7 parts
     let mut fen_parts = fen.split(" ");
 
-    let piece_placement = fen_parts.next().ok_or(())?;
-    let active_color = fen_parts.next().ok_or(())?;
-    let castling_availability = fen_parts.next().ok_or(())?;
-    let en_passant_target_square = fen_parts.next().ok_or(())?;
-    let halfmove_clock = fen_parts.next().ok_or(())?;
-    let fullmove_number = fen_parts.next().ok_or(())?;
+    let piece_placement = fen_parts.next().unwrap();
+    let active_color = fen_parts.next().unwrap();
+    let castling_availability = fen_parts.next().unwrap();
+    let en_passant_target_square = fen_parts.next().unwrap();
+    let halfmove_clock = fen_parts.next().unwrap();
+    let fullmove_number = fen_parts.next().unwrap();
 
     self.reset(); // New FEN, new board
 
@@ -222,7 +222,7 @@ impl Board {
         row += 1;
         col = 0;
       } else if c.is_digit(10) {
-        col += /* c.to_digit */ c.to_digit(10).unwrap() as u8;
+        col += c.to_digit(10).expect("Couldn't parse digit in FEN string notation") as u8;
       } else {
         let color = match c.is_uppercase() {
           true => Color::White,
@@ -237,7 +237,7 @@ impl Board {
           'b' => Bishop,
           'n' => Knight,
           'p' => Pawn,
-          _ => return Err(()) // Invalid piece
+          _ => return Err("Invalid piece while parsing FEN notation".to_string())
         };
 
         // Add the piece to the board and increment the column
@@ -256,7 +256,7 @@ impl Board {
     self.turn = match active_color {
       "w" => Color::White,
       "b" => Color::Black,
-      _ => return Err(())
+      _ => return Err("Invalid active color while parsing FEN notation (only w/b)".to_string())
     };
 
     // Castling availability
@@ -267,7 +267,7 @@ impl Board {
         'k' => self.castling[Color::Black as usize][CastlingSides::KingSide as usize] = true,
         'q' => self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] = true,
         '-' => (),
-        _ => return Err(())
+        _ => return Err("Invalid castling availability notation while parsing FEN notation (K/Q/k/q/- are avaivable)".to_string())
       }
     }
 
@@ -279,10 +279,10 @@ impl Board {
     }
 
     // Halfmove clock
-    self.halfmove_clock = halfmove_clock.parse().map_err(|_| ())?;
+    self.halfmove_clock = halfmove_clock.parse().map_err(|_| ()).expect("Couldn't parse halfmove clock in FEN notation");
 
     // Fullmove number
-    self.fullmove_number = fullmove_number.parse().map_err(|_| ())?;
+    self.fullmove_number = fullmove_number.parse().map_err(|_| ()).expect("Couldn't parse fullmove number in FEN notation");
 
     return Ok(())
   }
@@ -394,11 +394,8 @@ impl Board {
     piece: Piece,
     coord: Coordinate
   ) -> Option<Piece> {
-    // Checking if the coordinate is valid
-    match coord.is_valid() {
-      Ok(_) => (),
-      Err(()) => panic!("Invalid coordinate")
-    }
+    // Checking if the coordinate is valid first
+    coord.is_valid().expect("Invalid coordinate");
 
     let old_piece = self.get_piece(&coord);
 
@@ -821,7 +818,7 @@ impl Board {
   ) -> Vec<Coordinate> {
     // Get pseudo-legal moves and filter out moves that would put the king in check
     let mut moves = self.generate_pseudo_legal_moves(coord);
-    let color = self.get_piece(&coord).unwrap().color;
+    let color = self.get_piece(&coord).expect("Trying to generate moves for empty square").color;
 
     moves.retain(|&x| {
       let mut new_board = self.clone();
