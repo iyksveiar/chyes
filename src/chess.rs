@@ -155,7 +155,7 @@ enum CastlingSides {
 #[derive(Clone)]
 pub struct Board {
   pub turn:                 Color,
-  pub pieces:               HashMap<Coordinate, Piece>,
+  pub pieces:               Box<HashMap<Coordinate, Piece>>,
   pub en_passant_target_sq: Option<Coordinate>,
   pub castling:             [[bool; 2]; 2], // [color][side]
   pub halfmove_clock:       u16,
@@ -176,7 +176,7 @@ impl Board {
   pub fn new() -> Self {
     Board {
       turn:                 Color::White,
-      pieces:               HashMap::new(),
+      pieces:               Box::new(HashMap::new()),
       en_passant_target_sq: None,
 
       // Set castling to true for both sides
@@ -834,7 +834,7 @@ impl Board {
     &self,
     color: Color
   ) -> Option<Coordinate> {
-    for (coord, piece) in &self.pieces {
+    for (coord, piece) in self.pieces.iter() {
       if piece.breed == Pieces::King && piece.color == color {
         return Some(coord.clone())
       }
@@ -854,7 +854,7 @@ impl Board {
       return false
     }
 
-    for (coord, piece) in &self.pieces {
+    for (coord, piece) in self.pieces.iter() {
       if piece.color != color && piece.breed != Pieces::King {
         let moves = self.generate_pseudo_legal_moves(*coord);
 
@@ -875,7 +875,7 @@ impl Board {
       return false
     }
 
-    for (coord, piece) in &self.pieces {
+    for (coord, piece) in self.pieces.iter() {
       if piece.color == color && piece.breed != Pieces::King {
         let moves = self.generate_moves(*coord);
 
