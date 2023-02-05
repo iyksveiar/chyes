@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 // Sequence: King, Queen, Rook, Bishop, Knight, Pawn
 // NOTE: Might be changable in the future, via a command line argument
-pub const BLACK_PIECES: [&str; 6] = ["♔", "♕", "♖", "♗", "♘", "♙"];
-pub const WHITE_PIECES: [&str; 6] = ["♚", "♛", "♜", "♝", "♞", "♟"];
+pub const BLACK_PIECES: [char; 6] = ['♔', '♕', '♖', '♗', '♘', '♙'];
+pub const WHITE_PIECES: [char; 6] = ['♚', '♛', '♜', '♝', '♞', '♟'];
 
 // Macro to expand coord!(x, y) to Coordinate { row: x, col: y }
 macro_rules! coord {
@@ -134,8 +134,8 @@ impl Pieces {
   ) -> char {
     // Convert a piece to a unicode character
     match color {
-      Color::Black => BLACK_PIECES[*self as usize].chars().nth(0).unwrap(),
-      Color::White => WHITE_PIECES[*self as usize].chars().nth(0).unwrap()
+      Color::Black => BLACK_PIECES[*self as usize],
+      Color::White => WHITE_PIECES[*self as usize]
     }
   }
 }
