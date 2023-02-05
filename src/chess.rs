@@ -100,13 +100,8 @@ impl Coordinate {
     return Ok(coord!(number / 8, number % 8))
   }
 
-  pub fn is_valid(&self) -> Result<(), String> {
-    // Check if the coordinate is valid
-    if self.row > 7 || self.col > 7 {
-      return Err("Invalid coordinate".to_string())
-    }
-
-    return Ok(())
+  pub fn is_valid(&self) -> bool {
+    return self.row <= 7 && self.col <= 7
   }
 }
 
@@ -394,10 +389,7 @@ impl Board {
     piece: Piece,
     coord: Coordinate
   ) -> Option<Piece> {
-    // Checking if the coordinate is valid first
-    coord.is_valid().expect("Invalid coordinate");
-
-    let old_piece = self.get_piece(&coord);
+    let old_piece = coord.is_valid().then_some(self.get_piece(&coord)).unwrap();
 
     self.pieces.insert(coord, piece);
 
@@ -464,7 +456,7 @@ impl Board {
 
           let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
 
-          if new_coord.is_valid().is_ok()
+          if new_coord.is_valid()
             && (new_coord.row as i8 - coordinate.row as i8).abs() <= 1
             && (new_coord.col as i8 - coordinate.col as i8).abs() <= 1
           {
@@ -495,7 +487,7 @@ impl Board {
 
             let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
 
-            if new_coord.is_valid().is_ok() {
+            if new_coord.is_valid() {
               if [-7, -9, 7, 9].contains(delta) {
                 if (new_coord.row as i8 - coordinate.row as i8).abs()
                   != (new_coord.col as i8 - coordinate.col as i8).abs()
@@ -546,7 +538,7 @@ impl Board {
 
             let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
 
-            if new_coord.is_valid().is_ok()
+            if new_coord.is_valid()
               && (new_coord.row == coordinate.row || new_coord.col == coordinate.col)
             {
               let on_way_piece = self.get_piece(&new_coord);
@@ -583,7 +575,7 @@ impl Board {
 
             let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
 
-            if new_coord.is_valid().is_ok()
+            if new_coord.is_valid()
               && (new_coord.row as i8 - coordinate.row as i8).abs()
                 == (new_coord.col as i8 - coordinate.col as i8).abs()
             {
@@ -614,7 +606,7 @@ impl Board {
 
           let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
 
-          if new_coord.is_valid().is_ok()
+          if new_coord.is_valid()
             && (new_coord.row as i8 - coordinate.row as i8).abs() <= 2
             && (new_coord.col as i8 - coordinate.col as i8).abs() <= 2
           {
@@ -639,7 +631,7 @@ impl Board {
         let new_coord = coord!((coordinate.row as i8 + increment) as u8, coordinate.col);
 
         // Just straight moves
-        if new_coord.is_valid().is_ok() {
+        if new_coord.is_valid() {
           let on_way_piece = self.get_piece(&new_coord);
 
           if on_way_piece.is_none() {
@@ -648,7 +640,7 @@ impl Board {
             if coordinate.row == starting_row {
               let new_coord = coord!((new_coord.row as i8 + increment) as u8, new_coord.col);
 
-              if new_coord.is_valid().is_ok() {
+              if new_coord.is_valid() {
                 let on_way_piece = self.get_piece(&new_coord);
 
                 if on_way_piece.is_none() {
@@ -670,7 +662,7 @@ impl Board {
         {
           let move1 = coord!(move1_numeric as u8, coordinate.col - 1);
 
-          if move1.is_valid().is_ok() {
+          if move1.is_valid() {
             let on_way_piece = self.get_piece(&move1);
 
             if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
@@ -690,7 +682,7 @@ impl Board {
         {
           let move2 = coord!(move2_numeric as u8, coordinate.col + 1);
 
-          if move2.is_valid().is_ok() {
+          if move2.is_valid() {
             let on_way_piece = self.get_piece(&move2);
 
             if on_way_piece.is_some() && on_way_piece.unwrap().color != piece.color {
