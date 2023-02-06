@@ -805,10 +805,8 @@ mod tests {
       2 valid moves
     */
 
-    board.place_piece(piece!(Pawn, White), coord!(3, 3));
-    board.place_piece(piece!(Pawn, Black), coord!(3, 4));
-    board.en_passant_target_sq = Some(coord!(2, 4));
-    assert_eq!(board.generate_moves(coord!(3, 3)).len(), 2);
+    board.load_fen("8/8/8/2Pp4/8/8/8/8 b - d6 0 1".to_string()).expect("Could not load FEN");
+    assert_eq!(board.generate_moves(coord!(3, 2)).len(), 2);
     board.reset();
 
     // Case 10: Advanced en passant
