@@ -141,12 +141,12 @@ enum CastlingSides {
 
 #[derive(Clone)]
 pub struct Board {
-  pub turn:                 Color,
-  pub pieces:               Box<HashMap<Coordinate, Piece>>,
-  pub en_passant_target_sq: Option<Coordinate>,
-  pub castling:             [[bool; 2]; 2], // [color][side]
-  pub halfmove_clock:       u16,
-  pub fullmove_number:      u16
+  turn:                 Color,
+  pieces:               Box<HashMap<Coordinate, Piece>>,
+  en_passant_target_sq: Option<Coordinate>,
+  castling:             [[bool; 2]; 2], // [color][side]
+  halfmove_clock:       u16,
+  fullmove_number:      u16
 }
 
 impl Board {
