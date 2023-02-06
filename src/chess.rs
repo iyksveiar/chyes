@@ -40,16 +40,7 @@ impl Coordinate {
   pub fn to_notation(&self) -> String {
     // (0, 0) -> "a8"
     // (7, 7) -> "h1"
-
-    let mut notation = String::new();
-
-    // Add the column
-    notation.push((self.col + 97) as char);
-
-    // Add the row
-    notation.push((56 - self.row) as char);
-
-    return notation
+    return format!("{}{}", (self.col + 97) as char, (56 - self.row) as char);
   }
 
   pub fn from_notation(notation: String) -> Result<Self, String> {
