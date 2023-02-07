@@ -1,5 +1,6 @@
-use crate::chess::*;
 use std::str::FromStr;
+
+use crate::chess::*;
 
 macro_rules! coord {
   ($x:expr, $y:expr) => {
@@ -218,22 +219,10 @@ mod tests {
 
   #[test]
   fn coordinates_from_str() {
-    assert_eq!(
-      coord!(1, 1),
-      Coordinate::from_str("b7").unwrap()
-    );
-    assert_eq!(
-      coord!(3, 4),
-      Coordinate::from_str("e5").unwrap()
-    );
-    assert_eq!(
-      coord!(5, 7),
-      Coordinate::from_str("h3").unwrap()
-    );
-    assert_eq!(
-      coord!(7, 7),
-      Coordinate::from_str("h1").unwrap()
-    );
+    assert_eq!(coord!(1, 1), Coordinate::from_str("b7").unwrap());
+    assert_eq!(coord!(3, 4), Coordinate::from_str("e5").unwrap());
+    assert_eq!(coord!(5, 7), Coordinate::from_str("h3").unwrap());
+    assert_eq!(coord!(7, 7), Coordinate::from_str("h1").unwrap());
   }
 
   #[test]
@@ -801,7 +790,9 @@ mod tests {
       2 valid moves
     */
 
-    board.load_fen("8/8/8/2Pp4/8/8/8/8 b - d6 0 1").expect("Could not load FEN");
+    board
+      .load_fen("8/8/8/2Pp4/8/8/8/8 b - d6 0 1")
+      .expect("Could not load FEN");
     assert_eq!(board.generate_moves(coord!(3, 2)).len(), 2);
     board.reset();
 

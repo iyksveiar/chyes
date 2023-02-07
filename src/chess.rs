@@ -30,30 +30,30 @@ pub struct Coordinate {
 }
 
 impl FromStr for Coordinate {
-    type Err = &'static str;
+  type Err = &'static str;
 
-    fn from_str(notation: &str) -> Result<Self, Self::Err> {
-      // a8 -> (0, 0)
-      // h1 -> (7, 7)
+  fn from_str(notation: &str) -> Result<Self, Self::Err> {
+    // a8 -> (0, 0)
+    // h1 -> (7, 7)
 
-      // Check if the notation is valid
-      if notation.len() != 2 {
-        return Err("Couldn't parse notation")
-      }
-
-      // Get the column
-      let col = notation.chars().nth(0).unwrap() as u8 - 97;
-
-      // Get the row
-      let row = 56 - notation.chars().nth(1).unwrap() as u8;
-
-      // Check if the column and row are valid
-      if col > 7 || row > 7 {
-        return Err("Provided notation is out of bounds")
-      }
-
-      return Ok(coord!(row, col))
+    // Check if the notation is valid
+    if notation.len() != 2 {
+      return Err("Couldn't parse notation")
     }
+
+    // Get the column
+    let col = notation.chars().nth(0).unwrap() as u8 - 97;
+
+    // Get the row
+    let row = 56 - notation.chars().nth(1).unwrap() as u8;
+
+    // Check if the column and row are valid
+    if col > 7 || row > 7 {
+      return Err("Provided notation is out of bounds")
+    }
+
+    return Ok(coord!(row, col))
+  }
 }
 
 impl Coordinate {
@@ -65,7 +65,7 @@ impl Coordinate {
   pub fn to_notation(&self) -> String {
     // (0, 0) -> "a8"
     // (7, 7) -> "h1"
-    return format!("{}{}", (self.col + 97) as char, (56 - self.row) as char);
+    return format!("{}{}", (self.col + 97) as char, (56 - self.row) as char)
   }
 
   pub fn as_number(&self) -> u8 {
@@ -153,10 +153,14 @@ pub struct Board {
 
 impl Board {
   pub fn default() -> Self {
-    return Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").expect("Couldn't create default board")
+    return Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+      .expect("Couldn't create default board")
   }
 
-  pub fn load_fen(&mut self, fen: &str) -> Result<(), &str>{
+  pub fn load_fen(
+    &mut self,
+    fen: &str
+  ) -> Result<(), &str> {
     // Source: https://en.wikipedia.org/wiki/forsyth%e2%80%93edwards_notation
 
     // Splitting the FEN string into 7 parts
@@ -228,7 +232,10 @@ impl Board {
         'q' => self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] = true,
         '-' => (),
         _ => {
-          return Err("Invalid castling availability notation while parsing FEN notation (K/Q/k/q/- are avaivable)")
+          return Err(
+            "Invalid castling availability notation while parsing FEN notation (K/Q/k/q/- are \
+             avaivable)"
+          )
         },
       }
     }
@@ -275,9 +282,7 @@ impl Board {
     self.fullmove_number = 1;
   }
 
-  pub fn from_fen(
-    fen: &str
-  ) -> Result<Self, &str> {
+  pub fn from_fen(fen: &str) -> Result<Self, &str> {
     let mut board = Board::new();
     board.load_fen(fen).expect("Couldn't load FEN string");
     return Ok(board)
