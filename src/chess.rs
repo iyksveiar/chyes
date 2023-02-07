@@ -1,11 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 
 // Sequence: King, Queen, Rook, Bishop, Knight, Pawn
 // NOTE: Might be changable in the future, via a command line argument
 pub const BLACK_PIECES: [char; 6] = ['♔', '♕', '♖', '♗', '♘', '♙'];
 pub const WHITE_PIECES: [char; 6] = ['♚', '♛', '♜', '♝', '♞', '♟'];
 
-// Macro to expand coord!(x, y) to Coordinate { row: x, col: y }
 macro_rules! coord {
   ($x:expr, $y:expr) => {
     Coordinate {
@@ -14,7 +13,6 @@ macro_rules! coord {
   };
 }
 
-// piece!(King, Black) -> Piece { breed: Pieces::King, color: Color::Black }
 macro_rules! piece {
   ($piece:ident, $color:ident) => {
     Piece {
@@ -31,6 +29,33 @@ pub struct Coordinate {
   pub col: u8
 }
 
+impl FromStr for Coordinate {
+    type Err = String;
+
+    fn from_str(notation: &str) -> Result<Self, Self::Err> {
+      // a8 -> (0, 0)
+      // h1 -> (7, 7)
+
+      // Check if the notation is valid
+      if notation.len() != 2 {
+        return Err(format!("Couldn't parse notation: {}", notation))
+      }
+
+      // Get the column
+      let col = notation.chars().nth(0).unwrap() as u8 - 97;
+
+      // Get the row
+      let row = 56 - notation.chars().nth(1).unwrap() as u8;
+
+      // Check if the column and row are valid
+      if col > 7 || row > 7 {
+        return Err(format!("Provided notation is out of bounds: {}", notation))
+      }
+
+      return Ok(coord!(row, col))
+    }
+}
+
 impl Coordinate {
   // We assume that the coordinate is valid, when we transform or use it
   // Except when we need to construct a new coordinate
@@ -41,29 +66,6 @@ impl Coordinate {
     // (0, 0) -> "a8"
     // (7, 7) -> "h1"
     return format!("{}{}", (self.col + 97) as char, (56 - self.row) as char);
-  }
-
-  pub fn from_notation(notation: String) -> Result<Self, String> {
-    // a8 -> (0, 0)
-    // h1 -> (7, 7)
-
-    // Check if the notation is valid
-    if notation.len() != 2 {
-      return Err(format!("Couldn't parse notation: {}", notation))
-    }
-
-    // Get the column
-    let col = notation.chars().nth(0).unwrap() as u8 - 97;
-
-    // Get the row
-    let row = 56 - notation.chars().nth(1).unwrap() as u8;
-
-    // Check if the column and row are valid
-    if col > 7 || row > 7 {
-      return Err(format!("Provided notation is out of bounds: {}", notation))
-    }
-
-    return Ok(coord!(row, col))
   }
 
   pub fn as_number(&self) -> u8 {
@@ -268,9 +270,7 @@ impl Board {
 
     // En passant target square
     if en_passant_target_square != "-" {
-      self.en_passant_target_sq = Some(Coordinate::from_notation(
-        en_passant_target_square.to_string()
-      )?);
+      self.en_passant_target_sq = Some(Coordinate::from_str(en_passant_target_square)?);
     }
 
     // Halfmove clock
