@@ -30,7 +30,7 @@ pub struct Coordinate {
 }
 
 impl FromStr for Coordinate {
-    type Err = String;
+    type Err = &'static str;
 
     fn from_str(notation: &str) -> Result<Self, Self::Err> {
       // a8 -> (0, 0)
@@ -38,7 +38,7 @@ impl FromStr for Coordinate {
 
       // Check if the notation is valid
       if notation.len() != 2 {
-        return Err(format!("Couldn't parse notation: {}", notation))
+        return Err("Couldn't parse notation")
       }
 
       // Get the column
@@ -49,7 +49,7 @@ impl FromStr for Coordinate {
 
       // Check if the column and row are valid
       if col > 7 || row > 7 {
-        return Err(format!("Provided notation is out of bounds: {}", notation))
+        return Err("Provided notation is out of bounds")
       }
 
       return Ok(coord!(row, col))
@@ -153,41 +153,10 @@ pub struct Board {
 
 impl Board {
   pub fn default() -> Self {
-    let mut result = Board::new();
-    result
-      .load_fen(String::from(
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-      ))
-      .expect("Could not load FEN");
-    return result
+    return Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").expect("Couldn't create default board")
   }
 
-  pub fn new() -> Self {
-    Board {
-      turn:                 Color::White,
-      pieces:               Box::new(HashMap::new()),
-      en_passant_target_sq: None,
-
-      // Set castling to true for both sides
-      castling:        [[true; 2]; 2],
-      halfmove_clock:  0,
-      fullmove_number: 1
-    }
-  }
-
-  pub fn reset(&mut self) {
-    self.turn = Color::White;
-    self.pieces.clear();
-    self.en_passant_target_sq = None;
-    self.castling = [[true; 2]; 2];
-    self.halfmove_clock = 0;
-    self.fullmove_number = 1;
-  }
-
-  pub fn load_fen(
-    &mut self,
-    fen: String
-  ) -> Result<(), String> {
+  pub fn load_fen(&mut self, fen: &str) -> Result<(), &str>{
     // Source: https://en.wikipedia.org/wiki/forsyth%e2%80%93edwards_notation
 
     // Splitting the FEN string into 7 parts
@@ -200,7 +169,7 @@ impl Board {
     let halfmove_clock = fen_parts.next().unwrap();
     let fullmove_number = fen_parts.next().unwrap();
 
-    self.reset(); // New FEN, new board
+    self.reset();
 
     // Piece placement
     let mut row: u8 = 0;
@@ -228,7 +197,7 @@ impl Board {
           'b' => Bishop,
           'n' => Knight,
           'p' => Pawn,
-          _ => return Err("Invalid piece while parsing FEN notation".to_string())
+          _ => return Err("Invalid piece while parsing FEN notation")
         };
 
         // Add the piece to the board and increment the column
@@ -247,7 +216,7 @@ impl Board {
     self.turn = match active_color {
       "w" => Color::White,
       "b" => Color::Black,
-      _ => return Err("Invalid active color while parsing FEN notation (only w/b)".to_string())
+      _ => return Err("Invalid active color while parsing FEN notation (only w/b)")
     };
 
     // Castling availability
@@ -259,11 +228,7 @@ impl Board {
         'q' => self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] = true,
         '-' => (),
         _ => {
-          return Err(
-            "Invalid castling availability notation while parsing FEN notation (K/Q/k/q/- are \
-             avaivable)"
-              .to_string()
-          )
+          return Err("Invalid castling availability notation while parsing FEN notation (K/Q/k/q/- are avaivable)")
         },
       }
     }
@@ -286,6 +251,36 @@ impl Board {
       .expect("Couldn't parse fullmove number in FEN notation");
 
     return Ok(())
+  }
+
+  pub fn new() -> Self {
+    Board {
+      turn:                 Color::White,
+      pieces:               Box::new(HashMap::new()),
+      en_passant_target_sq: None,
+
+      // Set castling to true for both sides
+      castling:        [[true; 2]; 2],
+      halfmove_clock:  0,
+      fullmove_number: 1
+    }
+  }
+
+  pub fn reset(&mut self) {
+    self.turn = Color::White;
+    self.pieces.clear();
+    self.en_passant_target_sq = None;
+    self.castling = [[true; 2]; 2];
+    self.halfmove_clock = 0;
+    self.fullmove_number = 1;
+  }
+
+  pub fn from_fen(
+    fen: &str
+  ) -> Result<Self, &str> {
+    let mut board = Board::new();
+    board.load_fen(fen).expect("Couldn't load FEN string");
+    return Ok(board)
   }
 
   pub fn get_fen(&self) -> String {
