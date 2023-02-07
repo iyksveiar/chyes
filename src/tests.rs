@@ -1,6 +1,6 @@
 use crate::chess::*;
+use std::str::FromStr;
 
-// Macro to expand coord!(x, y) to Coordinate { row: x, col: y }
 macro_rules! coord {
   ($x:expr, $y:expr) => {
     Coordinate {
@@ -9,7 +9,6 @@ macro_rules! coord {
   };
 }
 
-// Macro to expand piece!(piece, color) to Piece { breed: Pieces::piece, color: Color::color }
 macro_rules! piece {
   ($piece:ident, $color:ident) => {
     Piece {
@@ -205,38 +204,35 @@ mod tests {
     board.reset();
 
     // Case 11
-    board
-      .load_fen(String::from("4r3/8/8/4K2r/8/8/8/8 w - - 0 1"))
-      .expect("Failed to load FEN");
+    let board = Board::from_fen("4r3/8/8/4K2r/8/8/8/8 w - - 0 1").expect("Failed to load FEN");
     assert_eq!(board.is_in_check(Color::White), true);
-    board.reset();
   }
 
   #[test]
   fn coordinates_to_notation() {
-    assert_eq!(coord!(1, 1).to_notation(), "b7".to_string());
-    assert_eq!(coord!(3, 4).to_notation(), "e5".to_string());
-    assert_eq!(coord!(5, 7).to_notation(), "h3".to_string());
-    assert_eq!(coord!(7, 7).to_notation(), "h1".to_string());
+    assert_eq!(coord!(1, 1).to_notation(), "b7");
+    assert_eq!(coord!(3, 4).to_notation(), "e5");
+    assert_eq!(coord!(5, 7).to_notation(), "h3");
+    assert_eq!(coord!(7, 7).to_notation(), "h1");
   }
 
   #[test]
-  fn coordinates_from_notation() {
+  fn coordinates_from_str() {
     assert_eq!(
       coord!(1, 1),
-      Coordinate::from_notation("b7".to_string()).unwrap()
+      Coordinate::from_str("b7").unwrap()
     );
     assert_eq!(
       coord!(3, 4),
-      Coordinate::from_notation("e5".to_string()).unwrap()
+      Coordinate::from_str("e5").unwrap()
     );
     assert_eq!(
       coord!(5, 7),
-      Coordinate::from_notation("h3".to_string()).unwrap()
+      Coordinate::from_str("h3").unwrap()
     );
     assert_eq!(
       coord!(7, 7),
-      Coordinate::from_notation("h1".to_string()).unwrap()
+      Coordinate::from_str("h1").unwrap()
     );
   }
 
@@ -349,7 +345,7 @@ mod tests {
     */
 
     board
-      .load_fen(String::from("2r1r3/8/7r/3K4/7r/8/8/8 w - - 0 1"))
+      .load_fen("2r1r3/8/7r/3K4/7r/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.generate_moves(coord!(3, 3)).len(), 0);
     board.reset();
@@ -805,7 +801,7 @@ mod tests {
       2 valid moves
     */
 
-    board.load_fen("8/8/8/2Pp4/8/8/8/8 b - d6 0 1".to_string()).expect("Could not load FEN");
+    board.load_fen("8/8/8/2Pp4/8/8/8/8 b - d6 0 1").expect("Could not load FEN");
     assert_eq!(board.generate_moves(coord!(3, 2)).len(), 2);
     board.reset();
 
@@ -821,7 +817,7 @@ mod tests {
     */
 
     board
-      .load_fen(String::from("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1"))
+      .load_fen("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.generate_moves(coord!(3, 3)).len(), 2);
     board.reset();
@@ -841,7 +837,7 @@ mod tests {
     */
 
     board
-      .load_fen(String::from("8/8/8/8/1KP3r1/8/8/8 w - - 0 1"))
+      .load_fen("8/8/8/8/1KP3r1/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.generate_moves(coord!(4, 2)).len(), 0);
 
@@ -855,7 +851,7 @@ mod tests {
     */
 
     board
-      .load_fen(String::from("8/8/8/8/1KRr4/8/8/8 w - - 0 1"))
+      .load_fen("8/8/8/8/1KRr4/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.generate_moves(coord!(4, 2)).len(), 1);
   }
@@ -866,55 +862,55 @@ mod tests {
 
     // Case 1: Double rook mate
     board
-      .load_fen(String::from("K6r/7r/8/8/8/8/8/8 w - - 0 1"))
+      .load_fen("K6r/7r/8/8/8/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::White), true);
     board.reset();
 
     // Case 2: Anderssen's mate
     board
-      .load_fen(String::from("6kR/6P1/5K2/8/8/8/8/8 w - - 0 1"))
+      .load_fen("6kR/6P1/5K2/8/8/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::Black), true);
     board.reset();
 
     // Case 3: Arabian mate
     board
-      .load_fen(String::from("7k/7R/5N2/8/8/8/8/8 w - - 0 1"))
+      .load_fen("7k/7R/5N2/8/8/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::Black), true);
     board.reset();
 
     // Case 4: Backrank mate
     board
-      .load_fen(String::from("3R2k1/5ppp/8/8/8/8/8/8 w - - 0 1"))
+      .load_fen("3R2k1/5ppp/8/8/8/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::Black), true);
     board.reset();
 
     // Case 4: Balestra mate
     board
-      .load_fen(String::from("6k1/8/4B2Q/8/8/8/8/8 w - - 0 1"))
+      .load_fen("6k1/8/4B2Q/8/8/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::Black), true);
     board.reset();
 
     // Case 5: Bishop and knight mate
     board
-      .load_fen(String::from("7k/8/5BKN/8/8/8/8/8 w - - 0 1"))
+      .load_fen("7k/8/5BKN/8/8/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::Black), true);
     board.reset();
 
     // Case 6: Blackburne's mate
     board
-      .load_fen(String::from("5rk1/7B/8/6N1/8/8/1B6/8 w - - 0 1"))
+      .load_fen("5rk1/7B/8/6N1/8/8/1B6/8 w - - 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::Black), true);
 
     // Case N: Not a mate
     board
-      .load_fen(String::from("K6r/7r/6N1/8/8/8/8/8 w - - 0 1"))
+      .load_fen("K6r/7r/6N1/8/8/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
     assert_eq!(board.is_in_checkmate(Color::White), false);
   }
