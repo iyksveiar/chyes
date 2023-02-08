@@ -214,11 +214,13 @@ mod tests {
   }
 
   #[test]
-  fn coordinates_from_str() {
-    assert_eq!(coord!(1, 1), Coordinate::from_str("b7").unwrap());
-    assert_eq!(coord!(3, 4), Coordinate::from_str("e5").unwrap());
-    assert_eq!(coord!(5, 7), Coordinate::from_str("h3").unwrap());
-    assert_eq!(coord!(7, 7), Coordinate::from_str("h1").unwrap());
+  fn coordinates_from_notation() {
+    assert_eq!(Coordinate::from_str("b7"), Ok(coord!(1, 1)));
+    assert_eq!(Coordinate::from_str("e5"), Ok(coord!(3, 4)));
+    assert_eq!(Coordinate::from_str("h3"), Ok(coord!(5, 7)));
+    assert_eq!(Coordinate::from_str("h1"), Ok(coord!(7, 7)));
+    assert_eq!(Err("Couldn't parse notation"), Coordinate::from_str("a9"));
+    assert_eq!(Err("Couldn't parse notation"), Coordinate::from_str("abc"));
   }
 
   #[test]
