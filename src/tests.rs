@@ -1,6 +1,4 @@
-use std::str::FromStr;
-
-use crate::chess::*;
+use crate::*;
 
 macro_rules! coord {
   ($x:expr, $y:expr) => {
