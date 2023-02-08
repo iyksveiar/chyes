@@ -53,12 +53,14 @@ impl Coordinate {
 
   // (0, 0) is the top left corner of the board
 
+  #[inline]
   pub fn to_notation(&self) -> String {
     // (0, 0) -> "a8"
     // (7, 7) -> "h1"
     return format!("{}{}", (self.col + 97) as char, (56 - self.row) as char)
   }
 
+  #[inline]
   pub fn as_number(&self) -> u8 {
     // Converts a coordinate to a number
     /*
@@ -87,6 +89,7 @@ impl Coordinate {
     return Ok(coord!(number / 8, number % 8))
   }
 
+  #[inline]
   pub fn is_valid(&self) -> bool { return self.row <= 7 && self.col <= 7 }
 }
 
@@ -198,10 +201,7 @@ impl Board {
         // Add the piece to the board and increment the column
         self.pieces.insert(
           coord!(row, col),
-          Piece {
-            breed: piece,
-            color
-          }
+          Piece { breed: piece, color }
         );
         col += 1;
       }
@@ -297,7 +297,9 @@ impl Board {
       for col in 0..8 {
         let coord = coord!(row, col);
 
-        if self.pieces.contains_key(&coord) {
+        if /* there is no piece at the coordinate */ !self.pieces.contains_key(&coord) {
+            empty_squares_count += 1;
+        } else {
           if empty_squares_count > 0 {
             fen.push_str(&empty_squares_count.to_string());
             empty_squares_count = 0;
@@ -315,19 +317,16 @@ impl Board {
             Pawn => 'P'
           };
 
+          // It is K/Q for white, and k/q for black
           fen.push(match piece.color {
             Color::White => c,
             Color::Black => c.to_ascii_lowercase()
           });
-        } else {
-          empty_squares_count += 1;
         }
       }
 
       if empty_squares_count > 0 {
-        fen.push_str(
-          /* empty_squares_count.to_digit() */ &empty_squares_count.to_string()
-        );
+        fen.push_str(&empty_squares_count.to_string());
       }
 
       if row < 7 {
@@ -374,15 +373,7 @@ impl Board {
       None => fen.push('-')
     };
 
-    fen.push(' ');
-
-    // Halfmove clock
-    fen.push_str(&self.halfmove_clock.to_string());
-
-    fen.push(' ');
-
-    // Fullmove number
-    fen.push_str(&self.fullmove_number.to_string());
+    fen.push_str(format!(" {} {}", self.halfmove_clock, self.fullmove_number).as_str());
 
     return fen
   }
