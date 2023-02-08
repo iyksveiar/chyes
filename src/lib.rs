@@ -201,7 +201,10 @@ impl Board {
         // Add the piece to the board and increment the column
         self.pieces.insert(
           coord!(row, col),
-          Piece { breed: piece, color }
+          Piece {
+            breed: piece,
+            color
+          }
         );
         col += 1;
       }
@@ -217,7 +220,7 @@ impl Board {
     macro_rules! set_castling {
       ($color:ident, $side:ident) => {
         self.castling[Color::$color as usize][CastlingSides::$side as usize]
-      }
+      };
     }
 
     // Castling availability
@@ -297,8 +300,10 @@ impl Board {
       for col in 0..8 {
         let coord = coord!(row, col);
 
-        if /* there is no piece at the coordinate */ !self.pieces.contains_key(&coord) {
-            empty_squares_count += 1;
+        if
+        /* there is no piece at the coordinate */
+        !self.pieces.contains_key(&coord) {
+          empty_squares_count += 1;
         } else {
           if empty_squares_count > 0 {
             fen.push_str(&empty_squares_count.to_string());
@@ -699,7 +704,9 @@ impl Board {
     start: Coordinate,
     target: Coordinate
   ) -> Result<Option<Piece>, String> {
-    let start_piece = self.get_piece(&start).expect("No piece at start coordinate");
+    let start_piece = self
+      .get_piece(&start)
+      .expect("No piece at start coordinate");
 
     let old_piece = self.get_piece(&target);
 
@@ -735,7 +742,7 @@ impl Board {
     macro_rules! set_castling {
       ($color:ident, $side:ident) => {
         self.castling[Color::$color as usize][CastlingSides::$side as usize]
-      }
+      };
     }
 
     // Update castling rights
