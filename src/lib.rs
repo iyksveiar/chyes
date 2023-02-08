@@ -1,4 +1,6 @@
+use core::fmt;
 use std::{collections::HashMap, str::FromStr};
+use std::convert::{TryFrom, TryInto};
 
 // Sequence: King, Queen, Rook, Bishop, Knight, Pawn
 // NOTE: Might be changable in the future, via a command line argument
@@ -18,6 +20,43 @@ macro_rules! coord {
 pub struct Coordinate {
   pub row: u8,
   pub col: u8
+}
+
+impl TryInto<u8> for Coordinate {
+    type Error = &'static str;
+
+    /*
+     * 00 01 02 03 04 05 06 07
+     * 08 09 10 11 12 13 14 15
+     * 16 17 18 19 20 21 22 23
+     * 24 25 26 27 28 29 30 31
+     * 32 33 34 35 36 37 38 39
+     * 40 41 42 43 44 45 46 47
+     * 48 49 50 51 52 53 54 55
+     * 56 57 58 59 60 61 62 63
+     */
+
+    fn try_into(self) -> Result<u8, Self::Error> {
+        if self.row > 7 || self.col > 7 {
+            Err("Coordinate out of bounds")
+        } else {
+            Ok(self.row * 8 + self.col)
+        }
+    }
+}
+impl TryFrom<u8> for Coordinate {
+    type Error = &'static str;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        if value > 63 {
+            Err("Coordinate out of bounds")
+        } else {
+            Ok(Coordinate {
+                row: value / 8,
+                col: value % 8,
+            })
+        }
+    }
 }
 
 impl FromStr for Coordinate {
@@ -40,10 +79,18 @@ impl FromStr for Coordinate {
 
     // Check if the column and row are valid
     if col > 7 || row > 7 {
-      return Err("Provided notation is out of bounds")
+      return Err("Provided notation is invalid")
     }
 
     return Ok(coord!(row, col))
+  }
+}
+
+impl fmt::Display for Coordinate {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+      // (0, 0) -> "a8"
+      // (7, 7) -> "h1"
+      return write!(f, "{}{}", (self.col + 97) as char, (56 - self.row) as char) 
   }
 }
 
@@ -52,42 +99,6 @@ impl Coordinate {
   // Except when we need to construct a new coordinate
 
   // (0, 0) is the top left corner of the board
-
-  #[inline]
-  pub fn to_notation(&self) -> String {
-    // (0, 0) -> "a8"
-    // (7, 7) -> "h1"
-    return format!("{}{}", (self.col + 97) as char, (56 - self.row) as char)
-  }
-
-  #[inline]
-  pub fn as_number(&self) -> u8 {
-    // Converts a coordinate to a number
-    /*
-     * 00 01 02 03 04 05 06 07
-     * 08 09 10 11 12 13 14 15
-     * 16 17 18 19 20 21 22 23
-     * 24 25 26 27 28 29 30 31
-     * 32 33 34 35 36 37 38 39
-     * 40 41 42 43 44 45 46 47
-     * 48 49 50 51 52 53 54 55
-     * 56 57 58 59 60 61 62 63
-     */
-
-    return self.row * 8 + self.col
-  }
-
-  pub fn from_number(number: u8) -> Result<Self, String> {
-    // Converts a number to a coordinate
-    if number > 63 {
-      return Err(format!(
-        "Provided number is out of 00-63 bounds: {}",
-        number
-      ))
-    }
-
-    return Ok(coord!(number / 8, number % 8))
-  }
 
   #[inline]
   pub fn is_valid(&self) -> bool { return self.row <= 7 && self.col <= 7 }
@@ -374,7 +385,7 @@ impl Board {
 
     // En passant target square
     match self.en_passant_target_sq {
-      Some(coord) => fen.push_str(&coord.to_notation()),
+      Some(coord) => fen.push_str(&coord.to_string()),
       None => fen.push('-')
     };
 
@@ -426,16 +437,16 @@ impl Board {
   fn generate_pseudo_legal_moves(
     &self,
     coordinate: Coordinate
-  ) -> Vec<Coordinate> {
+  ) -> Result<Vec<Coordinate>, &'static str> {
     let piece = self.get_piece(&coordinate);
 
     if piece.is_none() {
-      return Vec::new()
+      return Ok(Vec::new())
     }
 
     let piece = piece.unwrap();
     let mut moves: Vec<Coordinate> = Vec::new();
-    let numeric = coordinate.as_number(); // Numeric representation of the coordinate
+    let numeric: u8 = coordinate.try_into()?;
 
     use Pieces::*;
     match piece.breed {
@@ -453,7 +464,7 @@ impl Board {
             continue
           }
 
-          let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+          let new_coord = Coordinate::try_from(new_numeric as u8).expect("Invalid coordinate");
 
           if new_coord.is_valid()
             && (new_coord.row as i8 - coordinate.row as i8).abs() <= 1
@@ -484,7 +495,7 @@ impl Board {
               continue
             }
 
-            let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+            let new_coord = Coordinate::try_from(new_numeric as u8).expect("Invalid coordinate");
 
             if new_coord.is_valid() {
               if [-7, -9, 7, 9].contains(delta) {
@@ -535,7 +546,7 @@ impl Board {
               continue
             }
 
-            let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+            let new_coord = Coordinate::try_from(new_numeric as u8).expect("Invalid coordinate");
 
             if new_coord.is_valid()
               && (new_coord.row == coordinate.row || new_coord.col == coordinate.col)
@@ -572,7 +583,7 @@ impl Board {
               continue
             }
 
-            let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+            let new_coord = Coordinate::try_from(new_numeric as u8).expect("Invalid coordinate");
 
             if new_coord.is_valid()
               && (new_coord.row as i8 - coordinate.row as i8).abs()
@@ -603,7 +614,7 @@ impl Board {
             continue
           }
 
-          let new_coord = Coordinate::from_number(new_numeric as u8).expect("Invalid coordinate");
+          let new_coord = Coordinate::try_from(new_numeric as u8).expect("Invalid coordinate");
 
           if new_coord.is_valid()
             && (new_coord.row as i8 - coordinate.row as i8).abs() <= 2
@@ -696,7 +707,7 @@ impl Board {
       }
     }
 
-    return moves
+    return Ok(moves)
   }
 
   pub fn move_piece(
@@ -810,9 +821,9 @@ impl Board {
   pub fn generate_moves(
     &self,
     coord: Coordinate
-  ) -> Vec<Coordinate> {
+  ) -> Result<Vec<Coordinate>, &'static str> {
     // Get pseudo-legal moves and filter out moves that would put the king in check
-    let mut moves = self.generate_pseudo_legal_moves(coord);
+    let mut moves = self.generate_pseudo_legal_moves(coord)?;
     let color = self
       .get_piece(&coord)
       .expect("Trying to generate moves for empty square")
@@ -825,7 +836,7 @@ impl Board {
       return !new_board.is_in_check(color)
     });
 
-    return moves
+    return Ok(moves)
   }
 
   pub fn get_king_coord(
@@ -854,7 +865,7 @@ impl Board {
 
     for (coord, piece) in self.pieces.iter() {
       if piece.color != color && piece.breed != Pieces::King {
-        let moves = self.generate_pseudo_legal_moves(*coord);
+        let moves = self.generate_pseudo_legal_moves(*coord).expect("Couldn't generate moves to check if the King is in check");
 
         if moves.contains(&king_coord.unwrap()) {
           return true
@@ -875,7 +886,7 @@ impl Board {
 
     for (coord, piece) in self.pieces.iter() {
       if piece.color == color && piece.breed != Pieces::King {
-        let moves = self.generate_moves(*coord);
+        let moves = self.generate_moves(*coord).expect("Couldn't geenrate moves");
 
         if moves.len() > 0 {
           return false

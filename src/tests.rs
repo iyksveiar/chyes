@@ -1,5 +1,3 @@
-use crate::*;
-
 macro_rules! coord {
   ($x:expr, $y:expr) => {
     Coordinate {
@@ -19,7 +17,7 @@ macro_rules! piece {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  use crate::*;
 
   #[test]
   fn is_in_check() {
@@ -209,10 +207,10 @@ mod tests {
 
   #[test]
   fn coordinates_to_notation() {
-    assert_eq!(coord!(1, 1).to_notation(), "b7");
-    assert_eq!(coord!(3, 4).to_notation(), "e5");
-    assert_eq!(coord!(5, 7).to_notation(), "h3");
-    assert_eq!(coord!(7, 7).to_notation(), "h1");
+    assert_eq!(coord!(1, 1).to_string(), "b7");
+    assert_eq!(coord!(3, 4).to_string(), "e5");
+    assert_eq!(coord!(5, 7).to_string(), "h3");
+    assert_eq!(coord!(7, 7).to_string(), "h1");
   }
 
   #[test]
@@ -237,7 +235,7 @@ mod tests {
     */
 
     board.place_piece(piece!(King, White), coord!(0, 0));
-    assert_eq!(board.generate_moves(coord!(0, 0)).len(), 3);
+    assert_eq!(board.generate_moves(coord!(0, 0)).unwrap().len(), 3);
     board.reset();
 
     // Case 2: King in the top right
@@ -250,7 +248,7 @@ mod tests {
     */
 
     board.place_piece(piece!(King, White), coord!(0, 7));
-    assert_eq!(board.generate_moves(coord!(0, 7)).len(), 3);
+    assert_eq!(board.generate_moves(coord!(0, 7)).unwrap().len(), 3);
     board.reset();
 
     // Case 3: King in the bottom left
@@ -263,7 +261,7 @@ mod tests {
     */
 
     board.place_piece(piece!(King, White), coord!(7, 0));
-    assert_eq!(board.generate_moves(coord!(7, 0)).len(), 3);
+    assert_eq!(board.generate_moves(coord!(7, 0)).unwrap().len(), 3);
     board.reset();
 
     // Case 4: King in the bottom right
@@ -276,7 +274,7 @@ mod tests {
     */
 
     board.place_piece(piece!(King, White), coord!(7, 7));
-    assert_eq!(board.generate_moves(coord!(7, 7)).len(), 3);
+    assert_eq!(board.generate_moves(coord!(7, 7)).unwrap().len(), 3);
     board.reset();
 
     // Case 5: King in the middle
@@ -289,7 +287,7 @@ mod tests {
     */
 
     board.place_piece(piece!(King, White), coord!(4, 4));
-    assert_eq!(board.generate_moves(coord!(4, 4)).len(), 8);
+    assert_eq!(board.generate_moves(coord!(4, 4)).unwrap().len(), 8);
     board.reset();
 
     // Case 6: King in the middle with a friendly piece in the way
@@ -303,7 +301,7 @@ mod tests {
 
     board.place_piece(piece!(King, White), coord!(4, 4));
     board.place_piece(piece!(Queen, White), coord!(4, 5));
-    assert_eq!(board.generate_moves(coord!(4, 4)).len(), 7);
+    assert_eq!(board.generate_moves(coord!(4, 4)).unwrap().len(), 7);
     board.reset();
 
     // Case 7: King in the middle with an enemy piece in the way
@@ -317,7 +315,7 @@ mod tests {
 
     board.place_piece(piece!(King, White), coord!(4, 4));
     board.place_piece(piece!(Queen, Black), coord!(4, 5));
-    assert_eq!(board.generate_moves(coord!(4, 4)).len(), 3);
+    assert_eq!(board.generate_moves(coord!(4, 4)).unwrap().len(), 3);
     board.reset();
 
     // Case 8: Rooks and King, stale mate
@@ -334,7 +332,7 @@ mod tests {
     board
       .load_fen("2r1r3/8/7r/3K4/7r/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
-    assert_eq!(board.generate_moves(coord!(3, 3)).len(), 0);
+    assert_eq!(board.generate_moves(coord!(3, 3)).unwrap().len(), 0);
     board.reset();
 
     // Case 9: King in the middle with an enemy piece blocking some way
@@ -349,7 +347,7 @@ mod tests {
 
     board.place_piece(piece!(King, White), coord!(4, 4));
     board.place_piece(piece!(Rook, Black), coord!(3, 3));
-    assert_eq!(board.generate_moves(coord!(4, 4)).len(), 4);
+    assert_eq!(board.generate_moves(coord!(4, 4)).unwrap().len(), 4);
     board.reset();
   }
 
@@ -367,7 +365,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Bishop, White), coord!(0, 0));
-    assert_eq!(board.generate_moves(coord!(0, 0)).len(), 7);
+    assert_eq!(board.generate_moves(coord!(0, 0)).unwrap().len(), 7);
 
     // Case 2: Top right
     /*
@@ -380,7 +378,7 @@ mod tests {
 
     board.reset();
     board.place_piece(piece!(Bishop, White), coord!(0, 7));
-    assert_eq!(board.generate_moves(coord!(0, 7)).len(), 7);
+    assert_eq!(board.generate_moves(coord!(0, 7)).unwrap().len(), 7);
 
     // Case 3: Bottom left
     /*
@@ -393,7 +391,7 @@ mod tests {
 
     board.reset();
     board.place_piece(piece!(Bishop, White), coord!(7, 0));
-    assert_eq!(board.generate_moves(coord!(7, 0)).len(), 7);
+    assert_eq!(board.generate_moves(coord!(7, 0)).unwrap().len(), 7);
 
     // Case 4: Bottom right
     /*
@@ -406,7 +404,7 @@ mod tests {
 
     board.reset();
     board.place_piece(piece!(Bishop, White), coord!(7, 7));
-    assert_eq!(board.generate_moves(coord!(7, 7)).len(), 7);
+    assert_eq!(board.generate_moves(coord!(7, 7)).unwrap().len(), 7);
 
     // Case 5: Middle
     /*
@@ -419,7 +417,7 @@ mod tests {
 
     board.reset();
     board.place_piece(piece!(Bishop, White), coord!(3, 3));
-    assert_eq!(board.generate_moves(coord!(3, 3)).len(), 13);
+    assert_eq!(board.generate_moves(coord!(3, 3)).unwrap().len(), 13);
 
     // Case 6: Friendly piece on the way
     /*
@@ -433,7 +431,7 @@ mod tests {
     board.reset();
     board.place_piece(piece!(Pawn, White), coord!(2, 2));
     board.place_piece(piece!(Bishop, White), coord!(1, 1));
-    assert_eq!(board.generate_moves(coord!(1, 1)).len(), 3);
+    assert_eq!(board.generate_moves(coord!(1, 1)).unwrap().len(), 3);
 
     // Case 7: Enemy piece on the way
     /*
@@ -448,7 +446,7 @@ mod tests {
     board.reset();
     board.place_piece(piece!(Pawn, Black), coord!(2, 2));
     board.place_piece(piece!(Bishop, White), coord!(1, 1));
-    assert_eq!(board.generate_moves(coord!(1, 1)).len(), 4);
+    assert_eq!(board.generate_moves(coord!(1, 1)).unwrap().len(), 4);
   }
 
   #[test]
@@ -465,7 +463,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Rook, White), coord!(0, 0));
-    assert_eq!(board.generate_moves(coord!(0, 0)).len(), 14);
+    assert_eq!(board.generate_moves(coord!(0, 0)).unwrap().len(), 14);
     board.reset();
 
     // Case 2: Top right
@@ -478,7 +476,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Rook, White), coord!(0, 7));
-    assert_eq!(board.generate_moves(coord!(0, 7)).len(), 14);
+    assert_eq!(board.generate_moves(coord!(0, 7)).unwrap().len(), 14);
     board.reset();
 
     // Case 3: Bottom left
@@ -491,7 +489,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Rook, White), coord!(7, 0));
-    assert_eq!(board.generate_moves(coord!(7, 0)).len(), 14);
+    assert_eq!(board.generate_moves(coord!(7, 0)).unwrap().len(), 14);
     board.reset();
 
     // Case 4: Bottom right
@@ -504,7 +502,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Rook, White), coord!(7, 7));
-    assert_eq!(board.generate_moves(coord!(7, 7)).len(), 14);
+    assert_eq!(board.generate_moves(coord!(7, 7)).unwrap().len(), 14);
     board.reset();
 
     // Case 5: Middle
@@ -518,7 +516,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Rook, White), coord!(3, 3));
-    assert_eq!(board.generate_moves(coord!(3, 3)).len(), 14);
+    assert_eq!(board.generate_moves(coord!(3, 3)).unwrap().len(), 14);
     board.reset();
 
     // Case 6: Friendly piece on the way
@@ -533,7 +531,7 @@ mod tests {
 
     board.place_piece(piece!(Rook, White), coord!(6, 5));
     board.place_piece(piece!(Pawn, White), coord!(6, 6));
-    assert_eq!(board.generate_moves(coord!(6, 5)).len(), 12);
+    assert_eq!(board.generate_moves(coord!(6, 5)).unwrap().len(), 12);
 
     // Case 7: Enemy piece on the way
     /*
@@ -547,7 +545,7 @@ mod tests {
 
     board.place_piece(piece!(Rook, White), coord!(6, 5));
     board.place_piece(piece!(Pawn, Black), coord!(6, 6));
-    assert_eq!(board.generate_moves(coord!(6, 5)).len(), 13);
+    assert_eq!(board.generate_moves(coord!(6, 5)).unwrap().len(), 13);
   }
 
   #[test]
@@ -566,7 +564,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Knight, White), coord!(0, 0));
-    assert_eq!(board.generate_moves(coord!(0, 0)).len(), 2);
+    assert_eq!(board.generate_moves(coord!(0, 0)).unwrap().len(), 2);
     board.reset();
 
     // Case 2: Top right
@@ -581,7 +579,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Knight, White), coord!(0, 7));
-    assert_eq!(board.generate_moves(coord!(0, 7)).len(), 2);
+    assert_eq!(board.generate_moves(coord!(0, 7)).unwrap().len(), 2);
     board.reset();
 
     // Case 3: Bottom left
@@ -596,7 +594,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Knight, White), coord!(7, 0));
-    assert_eq!(board.generate_moves(coord!(7, 0)).len(), 2);
+    assert_eq!(board.generate_moves(coord!(7, 0)).unwrap().len(), 2);
     board.reset();
 
     // Case 4: Bottom left
@@ -611,7 +609,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Knight, White), coord!(7, 7));
-    assert_eq!(board.generate_moves(coord!(7, 7)).len(), 2);
+    assert_eq!(board.generate_moves(coord!(7, 7)).unwrap().len(), 2);
     board.reset();
 
     // Case 5: Middle
@@ -626,7 +624,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Knight, White), coord!(2, 2));
-    assert_eq!(board.generate_moves(coord!(2, 2)).len(), 8);
+    assert_eq!(board.generate_moves(coord!(2, 2)).unwrap().len(), 8);
     board.reset();
 
     // Case 6: 1 friendly piece on a way
@@ -642,7 +640,7 @@ mod tests {
 
     board.place_piece(piece!(Knight, White), coord!(2, 2));
     board.place_piece(piece!(Pawn, White), coord!(4, 1));
-    assert_eq!(board.generate_moves(coord!(2, 2)).len(), 7);
+    assert_eq!(board.generate_moves(coord!(2, 2)).unwrap().len(), 7);
     board.reset();
 
     // Case 7: 2 friendly pieces on a way
@@ -659,7 +657,7 @@ mod tests {
     board.place_piece(piece!(Knight, White), coord!(2, 2));
     board.place_piece(piece!(Pawn, White), coord!(4, 1));
     board.place_piece(piece!(Pawn, White), coord!(3, 4));
-    assert_eq!(board.generate_moves(coord!(2, 2)).len(), 6);
+    assert_eq!(board.generate_moves(coord!(2, 2)).unwrap().len(), 6);
     board.reset();
 
     // Case 8: Enemy piece on the way
@@ -675,7 +673,7 @@ mod tests {
 
     board.place_piece(piece!(Knight, White), coord!(2, 2));
     board.place_piece(piece!(Pawn, Black), coord!(4, 3));
-    assert_eq!(board.generate_moves(coord!(2, 2)).len(), 8);
+    assert_eq!(board.generate_moves(coord!(2, 2)).unwrap().len(), 8);
     board.reset();
   }
 
@@ -693,7 +691,7 @@ mod tests {
     */
 
     board.place_piece(piece!(Pawn, White), coord!(4, 3));
-    assert_eq!(board.generate_moves(coord!(4, 3)).len(), 1);
+    assert_eq!(board.generate_moves(coord!(4, 3)).unwrap().len(), 1);
     board.reset();
 
     // Case 2: Pawn in the middle with a friendly piece on the way
@@ -707,7 +705,7 @@ mod tests {
 
     board.place_piece(piece!(Pawn, White), coord!(4, 3));
     board.place_piece(piece!(King, White), coord!(3, 3));
-    assert_eq!(board.generate_moves(coord!(4, 3)).len(), 0);
+    assert_eq!(board.generate_moves(coord!(4, 3)).unwrap().len(), 0);
     board.reset();
 
     // Case 3: Pawn in the middle with an enemy piece on the way
@@ -721,7 +719,7 @@ mod tests {
 
     board.place_piece(piece!(Pawn, White), coord!(4, 3));
     board.place_piece(piece!(Pawn, Black), coord!(3, 3));
-    assert_eq!(board.generate_moves(coord!(4, 3)).len(), 0);
+    assert_eq!(board.generate_moves(coord!(4, 3)).unwrap().len(), 0);
     board.reset();
 
     // Case 4: Pawn in the middle with a enemy piece that can be captured
@@ -735,7 +733,7 @@ mod tests {
 
     board.place_piece(piece!(Pawn, White), coord!(4, 3));
     board.place_piece(piece!(Pawn, Black), coord!(3, 4));
-    assert_eq!(board.generate_moves(coord!(4, 3)).len(), 2);
+    assert_eq!(board.generate_moves(coord!(4, 3)).unwrap().len(), 2);
     board.reset();
 
     // Case 5: Pawn in the middle with 2 enemy pieces that can be captured
@@ -751,14 +749,14 @@ mod tests {
     board.place_piece(piece!(Pawn, White), coord!(4, 3));
     board.place_piece(piece!(Pawn, Black), coord!(3, 4));
     board.place_piece(piece!(Pawn, Black), coord!(3, 2));
-    assert_eq!(board.generate_moves(coord!(4, 3)).len(), 3);
+    assert_eq!(board.generate_moves(coord!(4, 3)).unwrap().len(), 3);
     board.reset();
 
     // Case 6: Pawn in the starting row
     // 2 valid moves
 
     board.place_piece(piece!(Pawn, White), coord!(6, 1));
-    assert_eq!(board.generate_moves(coord!(6, 1)).len(), 2);
+    assert_eq!(board.generate_moves(coord!(6, 1)).unwrap().len(), 2);
     board.reset();
 
     // Case 7: Pawn in the starting row with a friendly piece 2 steps away
@@ -766,7 +764,7 @@ mod tests {
 
     board.place_piece(piece!(Pawn, White), coord!(6, 1));
     board.place_piece(piece!(Pawn, White), coord!(4, 1));
-    assert_eq!(board.generate_moves(coord!(6, 1)).len(), 1);
+    assert_eq!(board.generate_moves(coord!(6, 1)).unwrap().len(), 1);
     board.reset();
 
     // Case 8: Pawn in the starting row with an enemy piece 2 steps away
@@ -774,7 +772,7 @@ mod tests {
 
     board.place_piece(piece!(Pawn, White), coord!(6, 1));
     board.place_piece(piece!(Pawn, Black), coord!(4, 1));
-    assert_eq!(board.generate_moves(coord!(6, 1)).len(), 1);
+    assert_eq!(board.generate_moves(coord!(6, 1)).unwrap().len(), 1);
     board.reset();
 
     // Case 9: Pawn in the middle with a Pawn that made a 2 step move, en passant possible
@@ -791,7 +789,7 @@ mod tests {
     board
       .load_fen("8/8/8/2Pp4/8/8/8/8 b - d6 0 1")
       .expect("Could not load FEN");
-    assert_eq!(board.generate_moves(coord!(3, 2)).len(), 2);
+    assert_eq!(board.generate_moves(coord!(3, 2)).unwrap().len(), 2);
     board.reset();
 
     // Case 10: Advanced en passant
@@ -808,7 +806,7 @@ mod tests {
     board
       .load_fen("8/8/2pK4/3Pp3/8/8/8/8 w - e6 0 1")
       .expect("Failed to load FEN");
-    assert_eq!(board.generate_moves(coord!(3, 3)).len(), 2);
+    assert_eq!(board.generate_moves(coord!(3, 3)).unwrap().len(), 2);
     board.reset();
   }
 
@@ -828,7 +826,7 @@ mod tests {
     board
       .load_fen("8/8/8/8/1KP3r1/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
-    assert_eq!(board.generate_moves(coord!(4, 2)).len(), 0);
+    assert_eq!(board.generate_moves(coord!(4, 2)).unwrap().len(), 0);
 
     // Case 2
     /*
@@ -842,7 +840,7 @@ mod tests {
     board
       .load_fen("8/8/8/8/1KRr4/8/8/8 w - - 0 1")
       .expect("Failed to load FEN");
-    assert_eq!(board.generate_moves(coord!(4, 2)).len(), 1);
+    assert_eq!(board.generate_moves(coord!(4, 2)).unwrap().len(), 1);
   }
 
   #[test]
