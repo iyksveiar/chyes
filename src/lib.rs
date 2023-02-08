@@ -72,10 +72,16 @@ impl FromStr for Coordinate {
     }
 
     // Get the column
-    let col = notation.chars().nth(0).unwrap() as u8 - 97;
+    let col: u8 = match (notation.chars().nth(0).unwrap() as isize - 97).try_into() {
+        Ok(num) => num,
+        Err(_) => return Err("Couldn't parse notation")
+    };
 
     // Get the row
-    let row = 56 - notation.chars().nth(1).unwrap() as u8;
+    let row: u8 = match (56 - notation.chars().nth(1).unwrap() as isize).try_into() {
+        Ok(num) => num,
+        Err(_) => return Err("Couldn't parse notation")
+    };
 
     // Check if the column and row are valid
     if col > 7 || row > 7 {
