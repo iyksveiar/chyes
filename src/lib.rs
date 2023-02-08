@@ -699,21 +699,17 @@ impl Board {
     start: Coordinate,
     target: Coordinate
   ) -> Result<Option<Piece>, String> {
-    let start_piece = self.get_piece(&start);
-
-    if start_piece.is_none() {
-      return Err(String::from("Trying to move empty square"))
-    }
+    let start_piece = self.get_piece(&start).expect("No piece at start coordinate");
 
     let old_piece = self.get_piece(&target);
 
-    if old_piece.is_some() && old_piece.unwrap().color == start_piece.unwrap().color {
+    if old_piece.is_some() && old_piece.unwrap().color == start_piece.color {
       return Err(String::from(
         "Trying to move to square with same color piece"
       ))
     }
 
-    self.place_piece(start_piece.unwrap(), target);
+    self.place_piece(start_piece, target);
 
     // Remove start piece from hashmap
     self.pieces.remove(&start);
@@ -721,9 +717,9 @@ impl Board {
     // Update en passant target square
     if
     /* piece is a pawn */
-    start_piece.unwrap().breed == Pieces::Pawn {
+    start_piece.breed == Pieces::Pawn {
       if (start.row as i8 - target.row as i8).abs() == 2 {
-        let increment = if start_piece.unwrap().color == Color::White {
+        let increment = if start_piece.color == Color::White {
           -1
         } else {
           1
@@ -736,21 +732,27 @@ impl Board {
       self.en_passant_target_sq = None;
     }
 
+    macro_rules! set_castling {
+      ($color:ident, $side:ident) => {
+        self.castling[Color::$color as usize][CastlingSides::$side as usize]
+      }
+    }
+
     // Update castling rights
     // If the king has moved
-    if start_piece.unwrap().breed == Pieces::King {
-      if start_piece.unwrap().color == Color::White {
-        self.castling[Color::White as usize][CastlingSides::KingSide as usize] = false;
-        self.castling[Color::White as usize][CastlingSides::QueenSide as usize] = false;
+    if start_piece.breed == Pieces::King {
+      if start_piece.color == Color::White {
+        set_castling!(White, KingSide) = false;
+        set_castling!(White, QueenSide) = false;
       } else {
-        self.castling[Color::Black as usize][CastlingSides::KingSide as usize] = false;
-        self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] = false;
+        set_castling!(Black, KingSide) = false;
+        set_castling!(Black, QueenSide) = false;
       }
     }
 
     // Checking if rook has moved
-    if start_piece.unwrap().breed == Pieces::Rook {
-      if start_piece.unwrap().color == Color::White {
+    if start_piece.breed == Pieces::Rook {
+      if start_piece.color == Color::White {
         if start == coord!(7, 0) {
           self.castling[Color::White as usize][CastlingSides::QueenSide as usize] = false;
         } else if start == coord!(7, 7) {
@@ -766,8 +768,8 @@ impl Board {
     }
 
     // Promotion
-    if start_piece.unwrap().breed == Pieces::Pawn {
-      let promotion_row = if start_piece.unwrap().color == Color::White {
+    if start_piece.breed == Pieces::Pawn {
+      let promotion_row = if start_piece.color == Color::White {
         0
       } else {
         7
@@ -775,7 +777,7 @@ impl Board {
 
       if target.row == promotion_row {
         let queen = Piece {
-          color: start_piece.unwrap().color,
+          color: start_piece.color,
           breed: Pieces::Queen
         };
         self.place_piece(queen, target);
