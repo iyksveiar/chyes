@@ -214,13 +214,19 @@ impl Board {
       _ => return Err("Invalid active color while parsing FEN notation (only w/b)")
     };
 
+    macro_rules! set_castling {
+      ($color:ident, $side:ident) => {
+        self.castling[Color::$color as usize][CastlingSides::$side as usize]
+      }
+    }
+
     // Castling availability
     for c in castling_availability.chars() {
       match c {
-        'K' => self.castling[Color::White as usize][CastlingSides::KingSide as usize] = true,
-        'Q' => self.castling[Color::White as usize][CastlingSides::QueenSide as usize] = true,
-        'k' => self.castling[Color::Black as usize][CastlingSides::KingSide as usize] = true,
-        'q' => self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] = true,
+        'K' => set_castling!(White, KingSide) = true,
+        'Q' => set_castling!(White, QueenSide) = true,
+        'k' => set_castling!(Black, KingSide) = true,
+        'q' => set_castling!(Black, QueenSide) = true,
         '-' => (),
         _ => {
           return Err(
