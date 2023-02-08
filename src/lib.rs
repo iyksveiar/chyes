@@ -13,15 +13,6 @@ macro_rules! coord {
   };
 }
 
-macro_rules! piece {
-  ($piece:ident, $color:ident) => {
-    Piece {
-      breed: Pieces::$piece,
-      color: Color::$color
-    }
-  };
-}
-
 // Coordinate struct
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Coordinate {
@@ -99,13 +90,13 @@ impl Coordinate {
   pub fn is_valid(&self) -> bool { return self.row <= 7 && self.col <= 7 }
 }
 
-#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Hash, Clone, Copy, PartialEq, Eq)]
 pub enum Color {
   Black = 0,
   White = 1
 }
 
-#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Hash, Clone, Copy, PartialEq, Eq)]
 pub enum Pieces {
   King,
   Queen,
@@ -129,7 +120,7 @@ impl Pieces {
   }
 }
 
-#[derive(Hash, Clone, Copy, Debug)]
+#[derive(Hash, Clone, Copy)]
 pub struct Piece {
   pub breed: Pieces,
   pub color: Color
@@ -889,3 +880,6 @@ impl Board {
     return true
   }
 }
+
+#[cfg(test)]
+mod tests;
