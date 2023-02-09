@@ -1,6 +1,6 @@
 use core::fmt;
-use std::{collections::HashMap, str::FromStr};
 use std::convert::{TryFrom, TryInto};
+use std::{collections::HashMap, str::FromStr};
 
 // Sequence: King, Queen, Rook, Bishop, Knight, Pawn
 // NOTE: Might be changable in the future, via a command line argument
@@ -23,40 +23,40 @@ pub struct Coordinate {
 }
 
 impl TryInto<u8> for Coordinate {
-    type Error = &'static str;
+  type Error = &'static str;
 
-    /*
-     * 00 01 02 03 04 05 06 07
-     * 08 09 10 11 12 13 14 15
-     * 16 17 18 19 20 21 22 23
-     * 24 25 26 27 28 29 30 31
-     * 32 33 34 35 36 37 38 39
-     * 40 41 42 43 44 45 46 47
-     * 48 49 50 51 52 53 54 55
-     * 56 57 58 59 60 61 62 63
-     */
+  /*
+   * 00 01 02 03 04 05 06 07
+   * 08 09 10 11 12 13 14 15
+   * 16 17 18 19 20 21 22 23
+   * 24 25 26 27 28 29 30 31
+   * 32 33 34 35 36 37 38 39
+   * 40 41 42 43 44 45 46 47
+   * 48 49 50 51 52 53 54 55
+   * 56 57 58 59 60 61 62 63
+   */
 
-    fn try_into(self) -> Result<u8, Self::Error> {
-        if self.row > 7 || self.col > 7 {
-            Err("Coordinate out of bounds")
-        } else {
-            Ok(self.row * 8 + self.col)
-        }
+  fn try_into(self) -> Result<u8, Self::Error> {
+    if self.row > 7 || self.col > 7 {
+      Err("Coordinate out of bounds")
+    } else {
+      Ok(self.row * 8 + self.col)
     }
+  }
 }
 impl TryFrom<u8> for Coordinate {
-    type Error = &'static str;
+  type Error = &'static str;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        if value > 63 {
-            Err("Coordinate out of bounds")
-        } else {
-            Ok(Coordinate {
-                row: value / 8,
-                col: value % 8,
-            })
-        }
+  fn try_from(value: u8) -> Result<Self, Self::Error> {
+    if value > 63 {
+      Err("Coordinate out of bounds")
+    } else {
+      Ok(Coordinate {
+        row: value / 8,
+        col: value % 8
+      })
     }
+  }
 }
 
 impl FromStr for Coordinate {
@@ -73,14 +73,14 @@ impl FromStr for Coordinate {
 
     // Get the column
     let col: u8 = match (notation.chars().nth(0).unwrap() as isize - 97).try_into() {
-        Ok(num) => num,
-        Err(_) => return Err("Couldn't parse notation")
+      Ok(num) => num,
+      Err(_) => return Err("Couldn't parse notation")
     };
 
     // Get the row
     let row: u8 = match (56 - notation.chars().nth(1).unwrap() as isize).try_into() {
-        Ok(num) => num,
-        Err(_) => return Err("Couldn't parse notation")
+      Ok(num) => num,
+      Err(_) => return Err("Couldn't parse notation")
     };
 
     // Check if the column and row are valid
@@ -93,10 +93,13 @@ impl FromStr for Coordinate {
 }
 
 impl fmt::Display for Coordinate {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-      // (0, 0) -> "a8"
-      // (7, 7) -> "h1"
-      return write!(f, "{}{}", (self.col + 97) as char, (56 - self.row) as char) 
+  fn fmt(
+    &self,
+    f: &mut fmt::Formatter<'_>
+  ) -> fmt::Result {
+    // (0, 0) -> "a8"
+    // (7, 7) -> "h1"
+    return write!(f, "{}{}", (self.col + 97) as char, (56 - self.row) as char)
   }
 }
 
@@ -871,7 +874,9 @@ impl Board {
 
     for (coord, piece) in self.pieces.iter() {
       if piece.color != color && piece.breed != Pieces::King {
-        let moves = self.generate_pseudo_legal_moves(*coord).expect("Couldn't generate moves to check if the King is in check");
+        let moves = self
+          .generate_pseudo_legal_moves(*coord)
+          .expect("Couldn't generate moves to check if the King is in check");
 
         if moves.contains(&king_coord.unwrap()) {
           return true
@@ -892,7 +897,9 @@ impl Board {
 
     for (coord, piece) in self.pieces.iter() {
       if piece.color == color && piece.breed != Pieces::King {
-        let moves = self.generate_moves(*coord).expect("Couldn't geenrate moves");
+        let moves = self
+          .generate_moves(*coord)
+          .expect("Couldn't geenrate moves");
 
         if moves.len() > 0 {
           return false
