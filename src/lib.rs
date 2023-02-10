@@ -6,6 +6,8 @@ use std::{collections::HashMap, str::FromStr};
 // NOTE: Might be changable in the future, via a command line argument
 pub const BLACK_PIECES: [char; 6] = ['♔', '♕', '♖', '♗', '♘', '♙'];
 pub const WHITE_PIECES: [char; 6] = ['♚', '♛', '♜', '♝', '♞', '♟'];
+// pub const BLACK_PIECES: [char; 6] = ['k', 'q', 'r', 'b', 'n', 'p'];
+// pub const WHITE_PIECES: [char; 6] = ['K', 'Q', 'R', 'B', 'N', 'P'];
 
 macro_rules! coord {
   ($x:expr, $y:expr) => {
@@ -149,6 +151,15 @@ pub struct Piece {
   pub color: Color
 }
 
+impl fmt::Display for Piece {
+  fn fmt(
+    &self,
+    f: &mut fmt::Formatter<'_>
+  ) -> fmt::Result {
+    return write!(f, "{}", self.breed.to_unicode(self.color))
+  }
+}
+
 #[derive(Hash, Eq, PartialEq, Copy, Clone)]
 enum CastlingSides {
   KingSide = 0,
@@ -163,6 +174,24 @@ pub struct Board {
   castling:             [[bool; 2]; 2], // [color][side]
   halfmove_clock:       u16,
   fullmove_number:      u16
+}
+
+impl fmt::Display for Board {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for row in 0..8 {
+            for col in 0..8 {
+                let coord = coord!(row, col);
+                if let Some(piece) = self.pieces.get(&coord) {
+                    write!(f, "{}", piece)?;
+                } else {
+                    write!(f, ".")?;
+                }
+            }
+            writeln!(f)?;
+        }
+
+        return Ok(())
+    }
 }
 
 impl Board {
