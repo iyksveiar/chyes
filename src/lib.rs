@@ -49,6 +49,7 @@ impl TryInto<u8> for Coordinate {
     }
   }
 }
+
 impl TryFrom<u8> for Coordinate {
   type Error = &'static str;
 
@@ -195,15 +196,11 @@ impl Widget for Board {
         };
 
         // Draw piece if there is one
-        let piece = self.pieces.get(&coord!(row as u8, col as u8));
-        if piece.is_some() {
-          buf.set_string(
-            area.x + col,
-            area.y + row,
-            piece.unwrap().to_string(),
-            Style::default().fg(tui::style::Color::Black).bg(color)
-          );
-        }
+        let piece_as_str = match self.pieces.get(&coord!(row as u8, col as u8)) {
+          Some(piece) => piece.to_string(),
+          None => " ".to_string()
+        };
+        buf.set_string(area.x + col, area.y + row, piece_as_str, Style::default().fg(tui::style::Color::Black).bg(color));
       }
     }
   }
