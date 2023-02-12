@@ -1,4 +1,4 @@
-use std::{io, thread, time::Duration};
+use std::{io};
 
 use chyes::Board;
 use crossterm::{
@@ -8,8 +8,8 @@ use crossterm::{
 };
 use tui::{
   backend::CrosstermBackend,
-  layout::{Constraint, Direction, Layout, Margin, Rect},
-  widgets::{Block, Borders, Widget},
+  layout::{Margin, Rect},
+  widgets::{Block, Borders},
   Terminal
 };
 
