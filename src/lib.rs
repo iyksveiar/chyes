@@ -2,6 +2,9 @@ use core::fmt;
 use std::convert::{TryFrom, TryInto};
 use std::{collections::HashMap, str::FromStr};
 
+use tui::style::Style;
+use tui::widgets::Widget;
+
 // Sequence: King, Queen, Rook, Bishop, Knight, Pawn
 // NOTE: Might be changable in the future, via a command line argument
 pub const BLACK_PIECES: [char; 6] = ['♔', '♕', '♖', '♗', '♘', '♙'];
@@ -176,22 +179,55 @@ pub struct Board {
   fullmove_number:      u16
 }
 
-impl fmt::Display for Board {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for row in 0..8 {
-            for col in 0..8 {
-                let coord = coord!(row, col);
-                if let Some(piece) = self.pieces.get(&coord) {
-                    write!(f, "{}", piece)?;
-                } else {
-                    write!(f, ".")?;
-                }
-            }
-            writeln!(f)?;
-        }
+impl Widget for Board {
+  fn render(
+    self,
+    area: tui::layout::Rect,
+    buf: &mut tui::buffer::Buffer
+  ) {
+    for row in 0..8 {
+      for col in 0..8 {
+        // Determine what is background color for given coordinate
+        let color: tui::style::Color = if (row + col) % 2 == 0 {
+          tui::style::Color::Rgb(161, 189, 203) // Light
+        } else {
+          tui::style::Color::Rgb(254, 255, 255) // Dark
+        };
 
-        return Ok(())
+        // Draw piece if there is one
+        let piece = self.pieces.get(&coord!(row as u8, col as u8));
+        if piece.is_some() {
+          buf.set_string(
+            area.x + col,
+            area.y + row,
+            piece.unwrap().to_string(),
+            Style::default().fg(tui::style::Color::Black).bg(color)
+          );
+        }
+      }
     }
+  }
+}
+
+impl fmt::Display for Board {
+  fn fmt(
+    &self,
+    f: &mut fmt::Formatter<'_>
+  ) -> fmt::Result {
+    for row in 0..8 {
+      for col in 0..8 {
+        let coord = coord!(row, col);
+        if let Some(piece) = self.pieces.get(&coord) {
+          write!(f, "{}", piece)?;
+        } else {
+          write!(f, ".")?;
+        }
+      }
+      writeln!(f)?;
+    }
+
+    return Ok(())
+  }
 }
 
 impl Board {
