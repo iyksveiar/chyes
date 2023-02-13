@@ -264,9 +264,10 @@ impl Board {
           .to_digit(10)
           .expect("Couldn't parse digit in FEN string notation") as u8;
       } else {
-        let color = match c.is_uppercase() {
-          true => Color::White,
-          false => Color::Black
+        let color: Color = if c.is_uppercase() {
+          Color::White
+        } else {
+          Color::Black
         };
 
         use Pieces::*;
@@ -349,7 +350,7 @@ impl Board {
       en_passant_target_sq: None,
 
       // Set castling to true for both sides
-      castling:        [[true; 2]; 2],
+      castling:        [[false; 2]; 2],
       halfmove_clock:  0,
       fullmove_number: 1
     }
@@ -359,7 +360,7 @@ impl Board {
     self.turn = Color::White;
     self.pieces.clear();
     self.en_passant_target_sq = None;
-    self.castling = [[true; 2]; 2];
+    self.castling = [[false; 2]; 2];
     self.halfmove_clock = 0;
     self.fullmove_number = 1;
   }
@@ -382,17 +383,20 @@ impl Board {
       for col in 0..8 {
         let coord = coord!(row, col);
 
+        // !self.pieces.contains_key(&coord)
+        let piece = self.pieces.get(&coord);
+
         if
         /* there is no piece at the coordinate */
-        !self.pieces.contains_key(&coord) {
+         piece.is_none() {
           empty_squares_count += 1;
         } else {
+          let piece = piece.unwrap();
+
           if empty_squares_count > 0 {
             fen.push_str(&empty_squares_count.to_string());
             empty_squares_count = 0;
           }
-
-          let piece = self.pieces.get(&coord).unwrap();
 
           use Pieces::*;
           let c = match piece.breed {
@@ -431,23 +435,29 @@ impl Board {
 
     fen.push(' ');
 
+    macro_rules! can_castle {
+      ($color:ident, $side:ident) => {
+        self.castling[Color::$color as usize][CastlingSides::$side as usize]
+      };
+    }
+
     // Castling availability
     if self.castling.iter().all(|x| x.is_empty()) {
       fen.push('-');
     } else {
-      if self.castling[Color::White as usize][CastlingSides::KingSide as usize] {
+      if can_castle!(White, KingSide) {
         fen.push('K');
       }
 
-      if self.castling[Color::White as usize][CastlingSides::QueenSide as usize] {
+      if can_castle!(White, QueenSide) {
         fen.push('Q');
       }
 
-      if self.castling[Color::Black as usize][CastlingSides::KingSide as usize] {
+      if can_castle!(Black, KingSide) {
         fen.push('k');
       }
 
-      if self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] {
+      if can_castle!(Black, QueenSide) {
         fen.push('q');
       }
     }
