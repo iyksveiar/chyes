@@ -21,22 +21,21 @@ fn main() -> Result<(), io::Error> {
   let backend = CrosstermBackend::new(stdout);
   let mut terminal = Terminal::new(backend)?;
 
-  let board = Board::default();
-
-  terminal.draw(|f| {
-    let size = f.size();
-    let block = Block::default().title("Chyes").borders(Borders::ALL);
-    f.render_widget(block, size);
-    f.render_widget(
-      board,
-      size.inner(&Margin {
-        horizontal: 10,
-        vertical:   10
-      })
-    );
-  })?;
-
   loop {
+    terminal.draw(|f| {
+      let board = Board::default();
+      let size = f.size();
+      let block = Block::default().title("Chyes").borders(Borders::ALL);
+      f.render_widget(block, size);
+      f.render_widget(
+        board,
+        size.inner(&Margin {
+          horizontal: 10,
+          vertical:   10
+        })
+      );
+    })?;
+
     match event::read()? {
       Event::Key(event) => match event.code {
         KeyCode::Char('q') => break,
