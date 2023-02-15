@@ -7,10 +7,8 @@ use tui::widgets::Widget;
 
 // Sequence: King, Queen, Rook, Bishop, Knight, Pawn
 // NOTE: Might be changable in the future, via a command line argument
-pub const BLACK_PIECES: [char; 6] = ['♔', '♕', '♖', '♗', '♘', '♙'];
-pub const WHITE_PIECES: [char; 6] = ['♚', '♛', '♜', '♝', '♞', '♟'];
-// pub const BLACK_PIECES: [char; 6] = ['k', 'q', 'r', 'b', 'n', 'p'];
-// pub const WHITE_PIECES: [char; 6] = ['K', 'Q', 'R', 'B', 'N', 'P'];
+pub(crate) const BLACK_PIECES: [char; 6] = ['♔', '♕', '♖', '♗', '♘', '♙'];
+pub(crate) const WHITE_PIECES: [char; 6] = ['♚', '♛', '♜', '♝', '♞', '♟'];
 
 macro_rules! coord {
   ($x:expr, $y:expr) => {
@@ -23,8 +21,8 @@ macro_rules! coord {
 // Coordinate struct
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Coordinate {
-  pub row: u8,
-  pub col: u8
+  row: u8,
+  col: u8
 }
 
 impl TryInto<u8> for Coordinate {
@@ -77,16 +75,13 @@ impl FromStr for Coordinate {
       return Err("Couldn't parse notation")
     }
 
-    // Get the column
-    let col: u8 = match (notation.chars().next().unwrap() as isize - 97).try_into() {
-      Ok(num) => num,
-      Err(_) => return Err("Couldn't parse notation")
-    };
-
-    // Get the row
-    let row: u8 = match (56 - notation.chars().nth(1).unwrap() as isize).try_into() {
-      Ok(num) => num,
-      Err(_) => return Err("Couldn't parse notation")
+    // Get row and column
+    let (row, col) = match (
+      (56 - notation.chars().nth(1).unwrap() as isize).try_into(),
+      (notation.chars().next().unwrap() as isize - 97).try_into()
+    ) {
+      (Ok(row), Ok(col)) => (row, col),
+      _ => return Err("Couldn't parse notation")
     };
 
     // Check if the column and row are valid
@@ -117,6 +112,14 @@ impl Coordinate {
 
   #[inline]
   pub fn is_valid(&self) -> bool { self.row <= 7 && self.col <= 7 }
+
+  #[inline]
+  pub fn from_notation(notation: &'static str) -> Result<Self, &'static str> {
+    Self::from_str(notation)
+  }
+
+  #[inline]
+  pub fn to_notation(&self) -> String { self.to_string() }
 }
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq)]
@@ -135,24 +138,41 @@ pub enum Pieces {
   Pawn
 }
 
+impl std::ops::Index<Pieces> for [char; 6] {
+  type Output = char;
+
+  fn index(
+    &self,
+    index: Pieces
+  ) -> &Self::Output {
+    match index {
+      Pieces::King => &self[0],
+      Pieces::Queen => &self[1],
+      Pieces::Rook => &self[2],
+      Pieces::Bishop => &self[3],
+      Pieces::Knight => &self[4],
+      Pieces::Pawn => &self[5]
+    }
+  }
+}
+
 impl Pieces {
-  // TODO: Probably I have to add Empty as new enum element, so I could use beautiful black or white squares
   pub fn to_unicode(
     &self,
     color: Color
   ) -> char {
     // Convert a piece to a unicode character
     match color {
-      Color::Black => BLACK_PIECES[*self as usize],
-      Color::White => WHITE_PIECES[*self as usize]
+      Color::Black => BLACK_PIECES[*self],
+      Color::White => WHITE_PIECES[*self]
     }
   }
 }
 
 #[derive(Hash, Clone, Copy)]
 pub struct Piece {
-  pub breed: Pieces,
-  pub color: Color
+  breed: Pieces,
+  color: Color
 }
 
 impl fmt::Display for Piece {
@@ -249,14 +269,17 @@ impl Board {
     // Source: https://en.wikipedia.org/wiki/forsyth%e2%80%93edwards_notation
 
     // Splitting the FEN string into 7 parts
-    let mut fen_parts = fen.split(' ');
-
-    let piece_placement = fen_parts.next().unwrap();
-    let active_color = fen_parts.next().unwrap();
-    let castling_availability = fen_parts.next().unwrap();
-    let en_passant_target_square = fen_parts.next().unwrap();
-    let halfmove_clock = fen_parts.next().unwrap();
-    let fullmove_number = fen_parts.next().unwrap();
+    let (
+      piece_placement,
+      active_color,
+      castling_availability,
+      en_passant_target_square,
+      halfmove_clock,
+      fullmove_number
+    ) = match fen.split(' ').collect::<Vec<_>>().as_slice() {
+      [pp, ac, ca, ep, hc, fulln] => (*pp, *ac, *ca, *ep, *hc, *fulln),
+      _ => panic!("The FEN string doesn't match the pattern")
+    };
 
     self.reset();
 
@@ -273,7 +296,7 @@ impl Board {
           .to_digit(10)
           .expect("Couldn't parse digit in FEN string notation") as u8;
       } else {
-        let color: Color = if c.is_uppercase() {
+        let color = if c.is_uppercase() {
           Color::White
         } else {
           Color::Black
@@ -322,7 +345,7 @@ impl Board {
         'Q' => set_castling!(White, QueenSide) = true,
         'k' => set_castling!(Black, KingSide) = true,
         'q' => set_castling!(Black, QueenSide) = true,
-        '-' => (),
+        '-' => break,
         _ => {
           return Err(
             "Invalid castling availability notation while parsing FEN notation (K/Q/k/q/- are \
@@ -442,7 +465,7 @@ impl Board {
     }
 
     // Castling availability
-    if self.castling.iter().all(|x| x.is_empty()) {
+    if self.castling[0] == [false, false] && self.castling[1] == [false, false] {
       fen.push('-');
     } else {
       if can_castle!(White, KingSide) {
