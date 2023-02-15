@@ -78,7 +78,7 @@ impl FromStr for Coordinate {
     }
 
     // Get the column
-    let col: u8 = match (notation.chars().nth(0).unwrap() as isize - 97).try_into() {
+    let col: u8 = match (notation.chars().next().unwrap() as isize - 97).try_into() {
       Ok(num) => num,
       Err(_) => return Err("Couldn't parse notation")
     };
@@ -94,7 +94,7 @@ impl FromStr for Coordinate {
       return Err("Provided notation is invalid")
     }
 
-    return Ok(coord!(row, col))
+    Ok(coord!(row, col))
   }
 }
 
@@ -105,7 +105,7 @@ impl fmt::Display for Coordinate {
   ) -> fmt::Result {
     // (0, 0) -> "a8"
     // (7, 7) -> "h1"
-    return write!(f, "{}{}", (self.col + 97) as char, (56 - self.row) as char)
+    write!(f, "{}{}", (self.col + 97) as char, (56 - self.row) as char)
   }
 }
 
@@ -116,7 +116,7 @@ impl Coordinate {
   // (0, 0) is the top left corner of the board
 
   #[inline]
-  pub fn is_valid(&self) -> bool { return self.row <= 7 && self.col <= 7 }
+  pub fn is_valid(&self) -> bool { self.row <= 7 && self.col <= 7 }
 }
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq)]
@@ -160,7 +160,7 @@ impl fmt::Display for Piece {
     &self,
     f: &mut fmt::Formatter<'_>
   ) -> fmt::Result {
-    return write!(f, "{}", self.breed.to_unicode(self.color))
+    write!(f, "{}", self.breed.to_unicode(self.color))
   }
 }
 
@@ -173,11 +173,15 @@ enum CastlingSides {
 #[derive(Clone)]
 pub struct Board {
   turn:                 Color,
-  pieces:               Box<HashMap<Coordinate, Piece>>,
+  pieces:               HashMap<Coordinate, Piece>,
   en_passant_target_sq: Option<Coordinate>,
   castling:             [[bool; 2]; 2], // [color][side]
   halfmove_clock:       u16,
   fullmove_number:      u16
+}
+
+impl Default for Board {
+  fn default() -> Self { Self::default() }
 }
 
 impl Widget for Board {
@@ -200,7 +204,12 @@ impl Widget for Board {
           Some(piece) => piece.to_string(),
           None => " ".to_string()
         };
-        buf.set_string(area.x + col, area.y + row, piece_as_str, Style::default().fg(tui::style::Color::Black).bg(color));
+        buf.set_string(
+          area.x + col,
+          area.y + row,
+          piece_as_str,
+          Style::default().fg(tui::style::Color::Black).bg(color)
+        );
       }
     }
   }
@@ -223,7 +232,7 @@ impl fmt::Display for Board {
       writeln!(f)?;
     }
 
-    return Ok(())
+    Ok(())
   }
 }
 
@@ -240,7 +249,7 @@ impl Board {
     // Source: https://en.wikipedia.org/wiki/forsyth%e2%80%93edwards_notation
 
     // Splitting the FEN string into 7 parts
-    let mut fen_parts = fen.split(" ");
+    let mut fen_parts = fen.split(' ');
 
     let piece_placement = fen_parts.next().unwrap();
     let active_color = fen_parts.next().unwrap();
@@ -259,7 +268,7 @@ impl Board {
       if c == '/' {
         row += 1;
         col = 0;
-      } else if c.is_digit(10) {
+      } else if c.is_ascii_digit() {
         col += c
           .to_digit(10)
           .expect("Couldn't parse digit in FEN string notation") as u8;
@@ -340,13 +349,13 @@ impl Board {
       .map_err(|_| ())
       .expect("Couldn't parse fullmove number in FEN notation");
 
-    return Ok(())
+    Ok(())
   }
 
   pub fn new() -> Self {
     Board {
       turn:                 Color::White,
-      pieces:               Box::new(HashMap::new()),
+      pieces:               HashMap::new(),
       en_passant_target_sq: None,
 
       // Set castling to true for both sides
@@ -368,7 +377,7 @@ impl Board {
   pub fn from_fen(fen: &str) -> Result<Self, &str> {
     let mut board = Board::new();
     board.load_fen(fen).expect("Couldn't load FEN string");
-    return Ok(board)
+    Ok(board)
   }
 
   pub fn get_fen(&self) -> String {
@@ -381,18 +390,7 @@ impl Board {
       let mut empty_squares_count = 0;
 
       for col in 0..8 {
-        let coord = coord!(row, col);
-
-        // !self.pieces.contains_key(&coord)
-        let piece = self.pieces.get(&coord);
-
-        if
-        /* there is no piece at the coordinate */
-         piece.is_none() {
-          empty_squares_count += 1;
-        } else {
-          let piece = piece.unwrap();
-
+        if let Some(piece) = self.pieces.get(&coord!(row, col)) {
           if empty_squares_count > 0 {
             fen.push_str(&empty_squares_count.to_string());
             empty_squares_count = 0;
@@ -413,6 +411,8 @@ impl Board {
             Color::White => c,
             Color::Black => c.to_ascii_lowercase()
           });
+        } else {
+          empty_squares_count += 1;
         }
       }
 
@@ -472,7 +472,7 @@ impl Board {
 
     fen.push_str(format!(" {} {}", self.halfmove_clock, self.fullmove_number).as_str());
 
-    return fen
+    fen
   }
 
   pub fn place_piece(
@@ -484,7 +484,7 @@ impl Board {
 
     self.pieces.insert(coord, piece);
 
-    return old_piece
+    old_piece
   }
 
   pub fn get_piece(
@@ -493,10 +493,7 @@ impl Board {
   ) -> Option<Piece> {
     let result = self.pieces.get(coordinate);
 
-    return match result {
-      Some(piece_ptr) => Some(piece_ptr.clone()),
-      None => None
-    }
+    result.copied()
   }
 
   pub fn draw(&self) {
@@ -541,7 +538,7 @@ impl Board {
         for delta in [-9, -8, -7, -1, 1, 7, 8, 9].iter() {
           let new_numeric = numeric as i8 + delta;
 
-          if new_numeric < 0 || new_numeric > 63 {
+          if !(0..=63).contains(&new_numeric) {
             continue
           }
 
@@ -572,39 +569,35 @@ impl Board {
           for delta in deltas.clone().iter() {
             let new_numeric = numeric as i8 + delta * depth;
 
-            if new_numeric < 0 || new_numeric > 63 {
+            if !(0..=63).contains(&new_numeric) {
               continue
             }
 
             let new_coord = Coordinate::try_from(new_numeric as u8).expect("Invalid coordinate");
 
             if new_coord.is_valid() {
-              if [-7, -9, 7, 9].contains(delta) {
-                if (new_coord.row as i8 - coordinate.row as i8).abs()
+              if [-7, -9, 7, 9].contains(delta)
+                && (new_coord.row as i8 - coordinate.row as i8).abs()
                   != (new_coord.col as i8 - coordinate.col as i8).abs()
-                {
-                  continue
-                }
+              {
+                continue
               }
 
-              if [-8, -1, 1, 8].contains(delta) {
-                if (new_coord.row as i8 - coordinate.row as i8).abs() != 0
-                  && (new_coord.col as i8 - coordinate.col as i8).abs() != 0
-                {
-                  continue
-                }
+              if [-8, -1, 1, 8].contains(delta)
+                && (new_coord.row as i8 - coordinate.row as i8).abs() != 0
+                && (new_coord.col as i8 - coordinate.col as i8).abs() != 0
+              {
+                continue
               }
 
-              let on_way_piece = self.get_piece(&new_coord);
-
-              if on_way_piece.is_none() {
-                moves.push(new_coord);
-              } else {
-                if on_way_piece.unwrap().color != piece.color {
+              if let Some(on_way_piece) = self.get_piece(&new_coord) {
+                if on_way_piece.color != piece.color {
                   moves.push(new_coord);
                 }
 
                 deltas.retain(|&x| x != *delta);
+              } else {
+                moves.push(new_coord);
               }
             }
           }
@@ -623,7 +616,7 @@ impl Board {
           for delta in deltas.clone().iter() {
             let new_numeric = numeric as i8 + delta * depth;
 
-            if new_numeric < 0 || new_numeric > 63 {
+            if !(0..=63).contains(&new_numeric) {
               continue
             }
 
@@ -632,16 +625,14 @@ impl Board {
             if new_coord.is_valid()
               && (new_coord.row == coordinate.row || new_coord.col == coordinate.col)
             {
-              let on_way_piece = self.get_piece(&new_coord);
-
-              if on_way_piece.is_none() {
-                moves.push(new_coord);
-              } else {
-                if on_way_piece.unwrap().color != piece.color {
+              if let Some(on_way_piece) = self.get_piece(&new_coord) {
+                if on_way_piece.color != piece.color {
                   moves.push(new_coord);
                 }
 
                 deltas.retain(|&x| x != *delta);
+              } else {
+                moves.push(new_coord);
               }
             }
           }
@@ -660,7 +651,7 @@ impl Board {
           for delta in deltas.clone().iter() {
             let new_numeric = numeric as i8 + delta * depth;
 
-            if new_numeric < 0 || new_numeric > 63 {
+            if !(0..=63).contains(&new_numeric) {
               continue
             }
 
@@ -670,28 +661,26 @@ impl Board {
               && (new_coord.row as i8 - coordinate.row as i8).abs()
                 == (new_coord.col as i8 - coordinate.col as i8).abs()
             {
-              let on_way_piece = self.get_piece(&new_coord);
-
-              if on_way_piece.is_none() {
-                moves.push(new_coord);
-              } else {
-                if on_way_piece.unwrap().color != piece.color {
+              if let Some(on_way_piece) = self.get_piece(&new_coord) {
+                if on_way_piece.color != piece.color {
                   moves.push(new_coord);
                 }
 
                 deltas.retain(|&x| x != *delta);
+              } else {
+                moves.push(new_coord);
               }
             }
           }
         }
       },
       Knight => {
-        let mut deltas = vec![-17, -15, -10, -6, 6, 10, 15, 17];
+        let deltas = vec![-17, -15, -10, -6, 6, 10, 15, 17];
 
-        for delta in deltas.clone().iter() {
+        for delta in deltas.iter() {
           let new_numeric = numeric as i8 + delta;
 
-          if new_numeric < 0 || new_numeric > 63 {
+          if !(0..64).contains(&new_numeric) {
             continue
           }
 
@@ -701,16 +690,12 @@ impl Board {
             && (new_coord.row as i8 - coordinate.row as i8).abs() <= 2
             && (new_coord.col as i8 - coordinate.col as i8).abs() <= 2
           {
-            let on_way_piece = self.get_piece(&new_coord);
-
-            if on_way_piece.is_none() {
-              moves.push(new_coord);
-            } else {
-              if on_way_piece.unwrap().color != piece.color {
+            if let Some(on_way_piece) = self.get_piece(&new_coord) {
+              if on_way_piece.color != piece.color {
                 moves.push(new_coord);
               }
-
-              deltas.retain(|&x| x != *delta);
+            } else {
+              moves.push(new_coord);
             }
           }
         }
@@ -746,11 +731,7 @@ impl Board {
         let move1_numeric = coordinate.row as i8 + increment;
         let move2_numeric = coordinate.row as i8 + increment;
 
-        if move1_numeric >= 0
-          && move1_numeric <= 63
-          && coordinate.col as i8 - 1 >= 0
-          && coordinate.col as i8 - 1 <= 7
-        {
+        if (0..=63).contains(&move1_numeric) && (0..=7).contains(&(coordinate.col as i8 - 1)) {
           let move1 = coord!(move1_numeric as u8, coordinate.col - 1);
 
           if move1.is_valid() {
@@ -766,11 +747,7 @@ impl Board {
           }
         }
 
-        if move2_numeric >= 0
-          && move2_numeric <= 63
-          && coordinate.col as i8 + 1 >= 0
-          && coordinate.col as i8 + 1 <= 7
-        {
+        if (0..=63).contains(&move2_numeric) && (0..=7).contains(&(coordinate.col as i8 + 1)) {
           let move2 = coord!(move2_numeric as u8, coordinate.col + 1);
 
           if move2.is_valid() {
@@ -788,7 +765,7 @@ impl Board {
       }
     }
 
-    return Ok(moves)
+    Ok(moves)
   }
 
   pub fn move_piece(
@@ -857,12 +834,10 @@ impl Board {
         } else if start == coord!(7, 7) {
           self.castling[Color::White as usize][CastlingSides::KingSide as usize] = false;
         }
-      } else {
-        if start == coord!(0, 0) {
-          self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] = false;
-        } else if start == coord!(0, 7) {
-          self.castling[Color::Black as usize][CastlingSides::KingSide as usize] = false;
-        }
+      } else if start == coord!(0, 0) {
+        self.castling[Color::Black as usize][CastlingSides::QueenSide as usize] = false;
+      } else if start == coord!(0, 7) {
+        self.castling[Color::Black as usize][CastlingSides::KingSide as usize] = false;
       }
     }
 
@@ -896,7 +871,7 @@ impl Board {
       Color::White
     };
 
-    return Ok(old_piece)
+    Ok(old_piece)
   }
 
   pub fn generate_moves(
@@ -914,10 +889,10 @@ impl Board {
       let mut new_board = self.clone();
       new_board.move_piece(coord, x).unwrap();
 
-      return !new_board.is_in_check(color)
+      !new_board.is_in_check(color)
     });
 
-    return Ok(moves)
+    Ok(moves)
   }
 
   pub fn get_king_coord(
@@ -926,11 +901,11 @@ impl Board {
   ) -> Option<Coordinate> {
     for (coord, piece) in self.pieces.iter() {
       if piece.breed == Pieces::King && piece.color == color {
-        return Some(coord.clone())
+        return Some(*coord)
       }
     }
 
-    return None
+    None
   }
 
   pub fn is_in_check(
@@ -956,7 +931,7 @@ impl Board {
       }
     }
 
-    return false
+    false
   }
 
   pub fn is_in_checkmate(
@@ -973,13 +948,13 @@ impl Board {
           .generate_moves(*coord)
           .expect("Couldn't geenrate moves");
 
-        if moves.len() > 0 {
+        if !moves.is_empty() {
           return false
         }
       }
     }
 
-    return true
+    true
   }
 }
 
