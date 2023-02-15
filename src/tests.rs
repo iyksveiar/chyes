@@ -180,20 +180,51 @@ fn is_in_check() {
 
 #[test]
 fn coordinates_to_notation() {
-  assert_eq!(coord!(1, 1).to_string(), "b7");
-  assert_eq!(coord!(3, 4).to_string(), "e5");
-  assert_eq!(coord!(5, 7).to_string(), "h3");
-  assert_eq!(coord!(7, 7).to_string(), "h1");
+  assert_eq!(coord!(1, 1).to_notation(), "b7");
+  assert_eq!(coord!(3, 4).to_notation(), "e5");
+  assert_eq!(coord!(5, 7).to_notation(), "h3");
+  assert_eq!(coord!(7, 7).to_notation(), "h1");
 }
 
 #[test]
 fn coordinates_from_notation() {
-  assert_eq!(Coordinate::from_str("b7"), Ok(coord!(1, 1)));
-  assert_eq!(Coordinate::from_str("e5"), Ok(coord!(3, 4)));
-  assert_eq!(Coordinate::from_str("h3"), Ok(coord!(5, 7)));
-  assert_eq!(Coordinate::from_str("h1"), Ok(coord!(7, 7)));
+  assert_eq!(Coordinate::from_notation("b7"), Ok(coord!(1, 1)));
+  assert_eq!(Coordinate::from_notation("e5"), Ok(coord!(3, 4)));
+  assert_eq!(Coordinate::from_notation("h3"), Ok(coord!(5, 7)));
+  assert_eq!(Coordinate::from_notation("h1"), Ok(coord!(7, 7)));
   assert_eq!(Err("Couldn't parse notation"), Coordinate::from_str("a9"));
   assert_eq!(Err("Couldn't parse notation"), Coordinate::from_str("abc"));
+}
+
+#[test]
+fn board_to_fen() {
+  assert_eq!(
+    Board::from_fen("8/8/8/8/8/8/8/8 w - - 0 1")
+      .expect("Couldn't load FEN")
+      .get_fen(),
+    "8/8/8/8/8/8/8/8 w - - 0 1"
+  );
+
+  assert_eq!(
+    Board::from_fen("rnbqkbnr/pp2pppp/2p5/3pP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 1")
+      .expect("Couldn't load FEN")
+      .get_fen(),
+    "rnbqkbnr/pp2pppp/2p5/3pP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 1"
+  );
+
+  assert_eq!(
+    Board::from_fen("r1bqk1nr/pppp1ppp/2n5/2b5/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 0 1")
+      .expect("Couldn't load FEN")
+      .get_fen(),
+    "r1bqk1nr/pppp1ppp/2n5/2b5/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 0 1"
+  );
+
+  assert_eq!(
+    Board::from_fen("8/p4K2/P7/8/8/8/7k/8 w - - 0 1")
+      .expect("Couldn't load FEN")
+      .get_fen(),
+    "8/p4K2/P7/8/8/8/7k/8 w - - 0 1"
+  );
 }
 
 #[test]
